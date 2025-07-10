@@ -20,7 +20,11 @@
  
 - [Kubelet](#Kubelet)
 
-  - [Installing the Kubelet](#Installing-the-Kubelet) 
+  - [Installing the Kubelet](#Installing-the-Kubelet)
+ 
+- [Kube Proxy](#Kube Proxy)
+
+- [Pod](#Pod)
   
 # Kubernetes-CKA-
 
@@ -320,6 +324,50 @@ ExecStart=/usr/local/bin/kubelet \
   --v=2
 ```
 
+If I use kubeadm tool to deploy my Cluster it does not automatically deploy the kubelet . I must alway manually install the Kubelet on my Worker Nodes 
+
+To see the kubelet process `ps aux | grep kueblet`
+
+## Kube Proxy
+
+Within Kubenetes Cluster every pod can reach every other Pod . This is accomplished by deploy pod networking solution to the Cluster . 
+
+Pod Network is an internal virtual network span accross all the nodes in the Cluster to Which all the pods connect to .
+
+Through this network they are able to communicate with each other . There are many solutions available for deploying such an network 
+
+I have a web Application deploy on the First Node and DB application deployed on the second  Node . Web App reach the DB using DB Ip address of the Pod, but no garantee IP of the pod will alway remain the same so we will use a Service 
+
+- So I created a Service to expose a DB application accross the Cluster . The web Application can now access the DB using the name of the Service
+
+- Service also get IP address assigned to it .
+
+- Whenever a Pod tries to reach the Service using its IP or name, it forwards the traffic to the backend pod which is DB
+
+- Service can not join the Pod network bcs Service is virtual component only live in Kubernetes memory
+
+How do Service should be accessible accross the Cluster from any nodes ? 
+
+- That's where Kube Proxy comes in
+
+- Kube-Proxy is a process that run on each Node in the Kubernetes Cluster its job to look for new Services, and everytime new Service is created it created the appropriate rules on each node to forward traffic to those services to the backend pods
+
+- One way it does this is using IPtables rules
+
+- This case it create a IPtables rules on each node in the cluster to forward traffic heading to the IP of the service
+
+## Pod 
+
+Kubernetes does not deploy containers directly on the Worker Nodes 
+
+Container encapsulated into a Kubernetes object known as Pods
+
+Pods is a smallest object in Kubernetes 
+
+I can have multiple comntainers in 1 Pod . They can share network space and storage space as well 
+
+
+To deploy Pod `kubectl run nginx --image nginx`
 
 
 
