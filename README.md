@@ -25,6 +25,10 @@
 - [Kube Proxy](#Kube-Proxy)
 
 - [Pod](#Pod)
+
+- [ReplicaSet](#ReplicaSet)
+
+  - [Labels and Selector](#Labels-and-Selector) 
   
 # Kubernetes-CKA-
 
@@ -369,9 +373,35 @@ I can have multiple comntainers in 1 Pod . They can share network space and stor
 
 To deploy Pod `kubectl run nginx --image nginx`
 
+## ReplicaSet
 
+The Replication Controller help us run multiple instances of a single pods in Kubernetes  thus provide High Availablity 
 
+Replication Controller can help by automatically bringing up the new Pod when the existing one failed . Thus Replication Controller ensure that the specified number of pods are running at all times even just 1 or 100 
 
+Another reason we use Replication Controller to create multiple Pod to share the load across them . When number of users increase we create multiple Pods to balance the Load . If we run out of resources on the First Node we could deploy addition Pods accross the other Node in the Cluster 
+
+ReplicaSet and Replication Controller both have the same purpose but they are not the same 
+
+Replication Controller is a older technologies that being replace by ReplicaSet 
+
+#### Selector Definition 
+
+Seletor in the ReplicaSet help the ReplicaSet identify what Pods fall under it 
+
+Why do we have to specify it ? 
+
+Bcs ReplicaSet can mananage Pods that that are not part of the ReplicaSet creation . 
+
+For example there are Pod created before ReplicaSet created that match lables specified in the Selector. The ReplicaSet also take those Pod into consideration when creating Replicas 
+
+#### Labels and Selector 
+
+The role of the ReplicaSet is to monitor the Pod and if any of them fail, deploy a new one . The ReplicaSet is in fact a process that monitor a Pod
+
+How does ReplicaSet know what Pods to monior ? 
+
+Labeling our Pod comes in . We can provide labels as a filter for ReplicasSet 
 
 
 
