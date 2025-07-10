@@ -22,7 +22,7 @@
 
   - [Installing the Kubelet](#Installing-the-Kubelet)
  
-- [Kube Proxy](#Kube Proxy)
+- [Kube Proxy](#Kube-Proxy)
 
 - [Pod](#Pod)
   
