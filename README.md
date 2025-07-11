@@ -44,7 +44,11 @@
 
 - [Scheduling](#Scheduling)
 
-  - [Manual Scheduling](#Manual-Scheduling) 
+  - [Manual Scheduling](#Manual-Scheduling)
+ 
+  - [What is a Binding in Kubernetes](#What-is-a-Binding-in-Kubernetes)
+ 
+  - [Labels and Selectors](#Labels-and-Selectors)
   
 # Kubernetes-CKA-
 
@@ -557,7 +561,7 @@ Then I will send the POST request to the Pod's Binding API in the JSON format (m
 
 `curl --header "Content-Type: application/json" --request POST --data {"apiVersion": "v1", "kind": "Binding", ...} http://$SERVER/api/v1/namespaces/default/pods/nginx/binding`
 
-#### What is a Binding in Kubernetes?
+#### What is a Binding in Kubernetes
 
 Binding object is an internal, low-level API resource that Kubernetes Scheduler use to bind a Pod to specific Node 
 
@@ -573,6 +577,20 @@ The Scheduler:
 - Writes a Binding object to the API server to commit the Pod to a Node.
 
 Kubernetes API server then sets the `nodeName` field on the Pod spec.
+
+#### Labels and Selectors
+
+Labels and Selectors is a standard methods to groups thing together 
+
+Labels are properties attached to each item . 
+
+Selectors help me filter these items 
+
+Kubernetes objects use labels and selector internally to connect different objects together . 
+
+Annotiations are used to record other details for informatory purpose . 
+
+- For example tool details like name, version, build inforamtion etc.... that maybe used for some kind of integration purpose 
 
 
 
