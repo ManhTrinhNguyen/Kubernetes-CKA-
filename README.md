@@ -39,6 +39,12 @@
 - [Namepsace](#Namepsace)
 
 - [Imperative and Declarative](#Imperative-and-Declarative)
+
+- [Apply Command](#Apply-Command)
+
+- [Scheduling](#Scheduling)
+
+  - [Manual Scheduling](#Manual-Scheduling) 
   
 # Kubernetes-CKA-
 
@@ -491,7 +497,6 @@ spec:
 
 ## Imperative and Declarative 
 
-
 ### Imperative Commands with Kubectl
 
 (https://www.udemy.com/course/certified-kubernetes-administrator-with-practice-tests/learn/lecture/15018998#overview)
@@ -500,6 +505,85 @@ Reference:
 https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands
 
 https://kubernetes.io/docs/reference/kubectl/conventions/
+
+## Apply Command
+
+The `apply` command takes into consideration the local configuration file, the live object definition on Kubernetes and the last applied configuration before making a decision on what changes are to be made 
+
+If I run `apply` command if the object does not already exist, the object is created . When the Object is created, an object configuration, similar to what we create locally is created within Kubernetes but with additional fiedls to store status of the object . This is the live configuration of the object on the Kubernetes Cluster 
+
+This is how Kubernetes internally stores information about an object no matter what approarch you use to create an object 
+
+When I use `apply` command it does something bit more . The YAML file from local is converted into a JSON format and it then strored as the last applied configuration 
+
+For any updates to the object all the three are compared to identify what changes are to be made on the live object .
+
+(https://kubernetes.io/docs/tasks/manage-kubernetes-objects/declarative-config/)
+
+## Scheduling
+
+### Manual Scheduling
+
+Every Pod have a field call `nodeName` that not set by default . 
+
+The sheduler goes through all the Pods and looks for those that don't have this property set . Those are the candidates for scheduling 
+
+It then identifies the right Node for the Pod by running the scheduling algorithm . Once identified it schedules the pods on the Node by setting the `nodeName` property to the name of the node by creating a binding object .
+
+If there is no scheduler to monitor and shedule Nodes the Pod continue to be in a pending State . Then I can manully assign pods to Nodes myself 
+
+Without a scheduler, the easiest way to schedule a pod is to simple set the `nodeName` field to the name of the Node in my pod specification file while creating the Pod . The Pod then get assigned to the specified node 
+
+I can only specify the `nodeName` at create time 
+
+Kubernetes won't allow me to modify the `nodeName` property of the a Pod . 
+
+Another way to assign a node to an existing Pod is to creating a Binding Object and send a POST request to the Pod's binding API thus mimicking what the actual scheduler does 
+
+In the `Binding Object` I specify the target Node with a name of the Node for example : 
+
+```
+apiVersion: v1
+kind: Binding
+metadata:
+  name: nginx
+target:
+  apiVersion: v1
+  kind: Node
+  name: node02
+```
+
+Then I will send the POST request to the Pod's Binding API in the JSON format (must convert the YAML file into a JSON format)
+
+`curl --header "Content-Type: application/json" --request POST --data {"apiVersion": "v1", "kind": "Binding", ...} http://$SERVER/api/v1/namespaces/default/pods/nginx/binding`
+
+#### What is a Binding in Kubernetes?
+
+Binding object is an internal, low-level API resource that Kubernetes Scheduler use to bind a Pod to specific Node 
+
+
+When you create a Pod, it starts out unscheduled — it has no Node assigned yet.
+
+The Scheduler:
+
+- Watches for Pods with nodeName not set.
+
+- Picks the best Node according to scheduling rules (resources, affinities, etc.).
+
+- Writes a Binding object to the API server to commit the Pod to a Node.
+
+Kubernetes API server then sets the `nodeName` field on the Pod spec.
+
+
+
+
+
+
+
+
+
+
+
 
 
 
