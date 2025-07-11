@@ -28,7 +28,9 @@
 
 - [ReplicaSet](#ReplicaSet)
 
-  - [Labels and Selector](#Labels-and-Selector) 
+  - [Labels and Selector](#Labels-and-Selector)
+ 
+- [Deployment](#Deployment) 
   
 # Kubernetes-CKA-
 
@@ -402,6 +404,8 @@ The role of the ReplicaSet is to monitor the Pod and if any of them fail, deploy
 How does ReplicaSet know what Pods to monior ? 
 
 Labeling our Pod comes in . We can provide labels as a filter for ReplicasSet 
+
+## Deployment
 
 
 
