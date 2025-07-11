@@ -30,7 +30,15 @@
 
   - [Labels and Selector](#Labels-and-Selector)
  
-- [Deployment](#Deployment) 
+- [Deployment](#Deployment)
+
+  - [Handy Syntax to create Deplpoyment](#Handy-Syntax-to-create-Deplpoyment)
+ 
+- [Services](#Services)
+
+- [Namepsace](#Namepsace)
+
+- [Imperative and Declarative](#Imperative-and-Declarative)
   
 # Kubernetes-CKA-
 
@@ -406,6 +414,102 @@ How does ReplicaSet know what Pods to monior ?
 Labeling our Pod comes in . We can provide labels as a filter for ReplicasSet 
 
 ## Deployment
+
+Deployment is an Kubernetes Object come higher in the hierarchy . Deployment provide capability to upgrade the underlying instances seamlessly using **rolling update**, undo changes, and paused and resume changes as required 
+
+Deployment automatically create a ReplicaSet 
+
+
+#### Handy Syntax to create Deplpoyment
+
+Create an NGINX Pod: `kubectl run nginx --image=nginx`
+
+Generate POD Manifest YAML file (-o yaml). Don't create it(--dry-run): `kubectl run nginx --image=nginx --dry-run=client -o yaml`
+
+Create a deployment: `kubectl create deployment --image=nginx nginx`
+
+Generate Deployment YAML file (-o yaml). Don't create it(--dry-run): `kubectl create deployment --image=nginx nginx --dry-run=client -o yaml`
+
+Generate Deployment YAML file (-o yaml). Don’t create it(–dry-run) and save it to a file: `kubectl create deployment --image=nginx nginx --dry-run=client -o yaml > nginx-deployment.yaml`
+
+Make necessary changes to the file (for example, adding more replicas) and then create the deployment: `kubectl create -f nginx-deployment.yaml`
+
+OR: 
+
+In k8s version 1.19+, we can specify the --replicas option to create a deployment with 4 replicas.: `kubectl create deployment --image=nginx nginx --replicas=4 --dry-run=client -o yaml > nginx-deployment.yaml`
+
+## Services
+
+Kubernetes Serives enable communication between components inside and outside of the applications 
+
+Kubernetes Services help us connect application together
+
+Service acts as a built-in load balancer to distribute load accross different Pods 
+
+## Namepsace
+
+Kubernetes create a set of pods and services for its internal purpose such as those required by the networking solution, DNS service etc ... 
+
+To isolate these from the user and to prevent me from accidentally deleting or modifying these services . Kubernetes create them under another namepsace created at cluster startup name `kube-system`\
+
+Third namespace created by Kubernetes is `kube-puclic` this is where resources should be made available to all user are created  
+
+I also can create my own namepsace . For exampl I will create a Dev environment and production environment namespace so when I am modifying each environment they not collapse with each other 
+
+Each of namepsaces can have its own set of policies that define who can do what . I can also assign quota of resources to each of  these namespaces . That way each namespace is guaranteed a certain amount and it does not use more that its allowed limit
+
+The resources within a namespace can refer to each other simply by their names 
+
+For Pods can reach Service in another namespace : `servicename.namespace.svc.cluster.local`. 
+
+- I am able to do this bcs when the Service is created, a DNS entry is added automatically in this format
+
+- the last part `cluster.local` is the default domain name of the Kubernetes Cluster
+
+- `svc` is a subdomain for `Service`
+
+To switch to namespace Permanently : `kubectl config set-context $(kubectl config current-context) --namespace=dev`
+
+To views pod in all namespace : `kubectl get pods --all-namespaces`
+
+To limit resources in a namepsace . Create a resource quota 
+
+```
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: compute-quota
+  namepsace: dev
+spec:
+  hard:
+    pods: "10"
+    request.cpu: "4"
+    requests.memory: 5Gi
+    limits.cpu: "10"
+    limits.memory: 10Gi
+```
+
+## Imperative and Declarative 
+
+
+### Imperative Commands with Kubectl
+
+(https://www.udemy.com/course/certified-kubernetes-administrator-with-practice-tests/learn/lecture/15018998#overview)
+
+Reference:
+https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands
+
+https://kubernetes.io/docs/reference/kubectl/conventions/
+
+
+
+
+
+
+
+
+
+
 
 
 
