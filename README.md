@@ -873,7 +873,11 @@ spec:
     limits.memory: 10Gi 
 ```
 
-**A quick note on editing Pods and Deployments** : (https://www.udemy.com/course/certified-kubernetes-administrator-with-practice-tests/learn/lecture/14937592#overview)
+### A quick note on editing Pods and Deployments : 
+
+(https://www.udemy.com/course/certified-kubernetes-administrator-with-practice-tests/learn/lecture/14937592#overview)
+
+
 
 
 
