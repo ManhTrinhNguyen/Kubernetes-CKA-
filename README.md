@@ -16,7 +16,7 @@
 
 - [Kube Scheduler](#Kube-Scheduler)
 
-  - [Installing and Running the Kube Scheduler]
+  - [Installing and Running the Kube Scheduler](#Installing-and-Running-the-Kube-Scheduler)
  
 - [Kubelet](#Kubelet)
 
@@ -55,6 +55,8 @@
 - [Node Selector](#Node-Selector)
 
 - [Node Affinity](#Node-Affinity)
+
+- [Resource Limit](#Resource-Limit)
   
 # Kubernetes-CKA-
 
@@ -727,7 +729,54 @@ Let's say we have labels and the pods scheduled . What if someone changes labels
    
     - If I choose `RequiredDuringExecution` which will evict any Pod that are running on Node that do not meet affinity rules   
 
+## Resource Limit
 
+`Resource Request`: With this I can specify the amount of CPU and Memory required for a Pod when creating one . So the minimum amount of CPU or Memory requested by the container 
+
+To do a `Resources Request`:
+
+```
+apiVersion: v1
+kind: Pod
+metadata:
+  name: simple-webapp-color
+  labels:
+    name: simple-webapp-color
+spec:
+  containers:
+  - name: simple-webapp-color
+    image: simple-webapp-color
+    ports:
+    - containerPort: 8080
+    resources:
+      requests:
+        memory: "4Gi"
+        cpu: 2
+```
+
+What does 1 count of a CPU mean ? 
+
+- I can specify any value as low as `0.1`. So `0.1 CPU` can also be expressed as 100m (m stand for milli)  . I can go as low as 1m
+
+- 1 count of `CPU` = 1 vCPU (AWS) = 1 GCP (Google) = 1 Azure Core  = 1 Hyperthread
+
+Memory : 
+
+- I can specify 256Mi (megibyte) or specify the same value in memory like this
+
+```
+1G = 1,000,000,000 bytes
+
+1M = 1,000,000 bytes
+
+1K = 1,000 bytes
+
+1Gi = 1,073,741,824 bytes
+
+1Mi = 1,048,576,bytes
+
+1Ki = 1,024 bytes
+```
 
 
 
