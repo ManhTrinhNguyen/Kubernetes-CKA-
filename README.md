@@ -57,6 +57,8 @@
 - [Node Affinity](#Node-Affinity)
 
 - [Resource Limit](#Resource-Limit)
+
+- [A quick note on editing Pods and Deployments](#A-quick-note-on-editing-Pods-and-Deployments)
   
 # Kubernetes-CKA-
 
@@ -778,6 +780,100 @@ Memory :
 1Ki = 1,024 bytes
 ```
 
+I can set a limit for a resources usage on these Pods using `Resources Limit`
+
+```
+apiVersion: v1
+kind: Pod
+metadata:
+  name: simple-webapp-color
+  labels:
+    name: simple-webapp-color
+spec:
+  containers:
+  - name: simple-webapp-color
+    image: simple-webapp-color
+    ports:
+    - containerPort: 8080
+    resources:
+      requests:
+        memory: "4Gi"
+        cpu: 2
+      limits:
+        memory: ""
+        cpu: ""
+```
+
+A containers can not use more CPU limits than its limit 
+
+However containers can use more its memory limit 
+
+`Default behavior` :  By default Kubernetes does not have a CPU or memory request or limit set . This mean that any Pod can consume as much resources as require on any node and suffocate other pods or processes running on the nodes 
+
+How to ensure that every pod created has some default set ? 
+
+- By using `LimitRange` .
+
+- `LimitRange` help me define default values to be set for containers in Pods that created without a request or limit specified in the Pod definition files . This is applicable at the `namespace` level 
+
+```
+# limit-range-cpu.yaml
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: cpu-resource-constraint
+spec:
+  limits:
+    - default:
+        cpu: 500m
+      defaultRequest:
+        cpu: 500m
+      max:
+        cpu: "1"
+      min:
+        cpu: 100m
+      type: Container
+```
+
+```
+# limit-range-memory.yaml
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: memory-resource-constraint
+spec:
+  limits:
+    - default:
+        memory: 1Gi
+      defaultRequest:
+        memory: 1Gi
+      max:
+        memory: 1Gi
+      min:
+        memory: 500Mi
+      type: Container
+```
+
+The way to restrict the total amount of resources that can  be consumed by applications deployed in Kubernetes Cluster 
+
+- For example If I have to say all the Pods together shouldn't consume more than this much CPU or Memory
+
+- To do that we create `Quotas` as a namespace level `ResourceQuota`
+
+```
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: my-resource-quota
+spec:
+  hard:
+    requests.cpu: 4
+    requests.memory: 4Gi
+    limits.cpu: 10
+    limits.memory: 10Gi 
+```
+
+**A quick note on editing Pods and Deployments** : (https://www.udemy.com/course/certified-kubernetes-administrator-with-practice-tests/learn/lecture/14937592#overview)
 
 
 
