@@ -49,6 +49,8 @@
   - [What is a Binding in Kubernetes](#What-is-a-Binding-in-Kubernetes)
  
   - [Labels and Selectors](#Labels-and-Selectors)
+ 
+- [Taints and Tolerance](#Taints-and-Tolerance)  
   
 # Kubernetes-CKA-
 
@@ -592,13 +594,51 @@ Annotiations are used to record other details for informatory purpose .
 
 - For example tool details like name, version, build inforamtion etc.... that maybe used for some kind of integration purpose 
 
+## Taints and Tolerance
 
+In Kubernetes, taints and tolerations are used solely for scheduling control, not security. 
 
+Taints and Tolerance used to set restrictions on what pods can be scheduled on a Node 
 
+Taints are set on Node, and Toleration are set on Pod 
 
+To taints the Nodes : `kubectl taints node node-name key=value:taint-effect`
 
+- `taint-effect` define what would happen to the Pod if they do not tolerace the taints
 
+- There is 3 `taint-effect` :
 
+  - `NodeSchedule`
+ 
+  - `PreferNoSchedule` which mean the system will try to avoid placing a Pod on the Node, but that not garantee
+ 
+  - `NoExecute`: which means that new Pods will not be schedule on the Node and existing Pods on the Nodes if any will be evicted if they do not tolerace the taints   
+
+Example : `kubectl taints nodes node1 app=blue:No-Schedule`
+
+To add `Toleration` to Pods : 
+
+```
+apiVersion: apps/v1
+kind: Pod
+metadata:
+  app: name
+spec:
+  containers:
+  - name: nginx-container
+    image: nginx
+  tolerations: ## All of these value need to be encoded in ""
+  - key: "app"
+    operator: "Equal"
+    value: "blue"
+    effect: "NoSchedule"
+```
+
+When the Pods are created or updated they are either not scheduled on Nodes or evicted from the existing Node depending on the Effect Set 
+
+Taints and Toleration are only meant to restrict Nodes from from accepting certain pods . For example If Node 1 can only accept Pod D but it doesn't guarantee that Pod D will alway be place on Node 1 
+
+If the requirment is to restrict a Pod to certain Nodes it is acchive through another concept called as `Node affinity` 
 
 
 
