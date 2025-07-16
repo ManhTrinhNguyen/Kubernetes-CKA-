@@ -50,17 +50,19 @@
  
   - [Labels and Selectors](#Labels-and-Selectors)
  
-- [Taints and Tolerance](#Taints-and-Tolerance)
-
-- [Node Selector](#Node-Selector)
-
-- [Node Affinity](#Node-Affinity)
-
-- [Resource Limit](#Resource-Limit)
-
-- [A quick note on editing Pods and Deployments](#A-quick-note-on-editing-Pods-and-Deployments)
-
-- [DaemonSet](#DaemonSet)
+  - [Taints and Tolerance](#Taints-and-Tolerance)
+  
+  - [Node Selector](#Node-Selector)
+  
+  - [Node Affinity](#Node-Affinity)
+  
+  - [Resource Limit](#Resource-Limit)
+  
+  - [A quick note on editing Pods and Deployments](#A-quick-note-on-editing-Pods-and-Deployments)
+  
+  - [DaemonSet](#DaemonSet)
+ 
+  - [Static Pod](#Static-Pod)
   
 # Kubernetes-CKA-
 
@@ -916,6 +918,33 @@ How do DaemonSet work ? How do it ensure that every Node has a Pod
 - We could set a `nodeName` on the Pod to bypass the scheduler and get the Pods place on a Node directly
 
 - From version 1.12 forward DaemonSet use the default scheduler and node affinity rules to schedule pod on Node 
+
+## Static Pod 
+
+The `kubelet` relies on the `kube-apiserver` for instructions on what Pods to load on its Node which was base on the decison made by `kube-scheduler` which was stored in the `etcd data store` . But what if there is no Master Node ? 
+
+I can configure the to read the Pod definiation files from a directory on the Server designated to store information about Pods . I will place the Pods defination file in this locations `/etc/kubernetes/manifests` . The `kublet` check this directory for files, read this file and create pod 
+
+Not only it create the Pod it can ensure that the Pod stay alive, if the application crashes the kublet attempt to restart it . 
+
+If I make a change to files on this directory . Kubelet will regenrate the Pod 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
