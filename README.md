@@ -59,6 +59,8 @@
 - [Resource Limit](#Resource-Limit)
 
 - [A quick note on editing Pods and Deployments](#A-quick-note-on-editing-Pods-and-Deployments)
+
+- [DaemonSet](#DaemonSet)
   
 # Kubernetes-CKA-
 
@@ -877,9 +879,43 @@ spec:
 
 (https://www.udemy.com/course/certified-kubernetes-administrator-with-practice-tests/learn/lecture/14937592#overview)
 
+## DaemonSet
 
+`DaemonSet` help to deploy multiple instance of Pods but its run one copy on every single Node in my Cluster . Whenever new node added to a Cluster a replica of the Pods automatically added to that node and when the Node is removed the Pods is automatically removed 
 
+Use case :
 
+- Deploy Monitoring agent
+
+- Deploy logs Collector app
+
+For example one of the Worker Nodes process is required on every Worker Nodes is `kube-proxy`. `kube-proxy` can be deploy as a DaemonSet 
+
+```
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+ name: monitoring-daemon
+spec:
+  selector:
+    matchLabels:
+      labels:
+        app: monitoring-daemon
+  template:
+    metadata:
+      labels:
+        app: monitoring-daemon
+    spec:
+      containers:
+        - name: monitoring-daemon
+          image: monitoring-image
+```
+
+How do DaemonSet work ? How do it ensure that every Node has a Pod
+
+- We could set a `nodeName` on the Pod to bypass the scheduler and get the Pods place on a Node directly
+
+- From version 1.12 forward DaemonSet use the default scheduler and node affinity rules to schedule pod on Node 
 
 
 
