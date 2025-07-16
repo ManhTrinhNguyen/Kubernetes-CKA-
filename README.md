@@ -50,7 +50,11 @@
  
   - [Labels and Selectors](#Labels-and-Selectors)
  
-- [Taints and Tolerance](#Taints-and-Tolerance)  
+- [Taints and Tolerance](#Taints-and-Tolerance)
+
+- [Node Selector](#Node-Selector)
+
+- [Node Affinity](#Node-Affinity)
   
 # Kubernetes-CKA-
 
@@ -640,16 +644,88 @@ Taints and Toleration are only meant to restrict Nodes from from accepting certa
 
 If the requirment is to restrict a Pod to certain Nodes it is acchive through another concept called as `Node affinity` 
 
+## Node Selector
 
+We can set limitations on the Pods so that they are only run on particular Node. There is 2 ways to do this 
 
+- First : Using `Node Selector`
 
+```
+apiVersion: apps/v1
+kind: Pod
+metadata:
+  app: name
+spec:
+  containers:
+  - name: nginx-container
+    image: nginx
+  nodeSelector:
+    size: Large
+```
 
+Where does `size: Large` come from and How Kubernetes know which is the Large Nodes ?
 
+- The key-value pair of size and large are in fact labels assigned to the Nodes . The `Scheduler` use labels to match and identify the right Node to place to Pods on
 
+How we can Labels the Nodes : `kubectl labels nodes node-name key=values`
 
+- For example: `kubectl labels nodes node01 size=large`
 
+## Node Affinity 
 
+The primary purpose of `Node Affinity` is to ensure that Pods are hosted on particular Nodes .
 
+`Node Affinity` provide us advance cabability to limit pod placement on specific nodes 
+
+```
+apiVersion: apps/v1
+kind: Pod
+metadata:
+  app: name
+spec:
+  containers:
+  - name: nginx-container
+    image: nginx
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoreDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: size
+            operator: In # 
+            values:
+            - Large
+```
+
+`operator: In`: Ensure that the pod will be place on Node whose labels `size` has any value in the list of `values` . I can add multiple values to a list of values 
+
+`operator: NotIn` : To do something like size not in small 
+
+`operator: Exist`: Will simply check if the Labels `size` exist on the Nodes and I don't need a value section for that as it does not compare the value
+
+What if `Node Affinity` could not match a Node with a given expression . What if there are no Nodes with a labels called Size ? 
+
+Let's say we have labels and the pods scheduled . What if someone changes labels on the Nodes at the future point in time ? will the pod continue to stay on the Node ? 
+
+- All of this is answered by property under nodeAffinity which happen to be a type of nodeAffinity
+
+- The type of nodeAffinity defines the behavior of the scheduler with respect to nodeAffinity and the stages in the life cycle of the Pod . There is 2 type available :
+
+  -  `requiredDuringSchedulingIgnoreDuringExecution`  and `preferredDuringSchedulingIgnoreDuringExecution`
+ 
+  -  `DuringScheduling` is when the pod is not existed and it created for the first time .
+ 
+  -  What if the Nodes with matching Labels are not available ?
+  
+    -  If I select the `required` type the scheduler will mandate that the pod be placed on the Node with a given affinity rule . If it can not find one . The Pod will not be scheduled
+
+    - If I select the `preferred` in cases where a matching node is not found the `Scheduler` will simply ignore nodeAffinity rules and place the pod on any available Node
+ 
+  - `DuringExecution` is the state where a Pod has been running and a change is made in the environment that effect nodeAffinity such as a change in the label of a Node
+ 
+    - For example if the Node removed the required Labels Pod will continue to run bcs the type set to `Ignored`
+   
+    - If I choose `RequiredDuringExecution` which will evict any Pod that are running on Node that do not meet affinity rules   
 
 
 
