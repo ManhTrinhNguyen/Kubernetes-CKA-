@@ -67,6 +67,8 @@
   - [Priority Classes](#Priority-Classes)
  
   - [Multiple Scheduler](#Multiple-Scheduler)
+ 
+  - [Scheduler Profile](#Scheduler-Profile)
   
 # Kubernetes-CKA-
 
@@ -1115,6 +1117,91 @@ spec:
 To know which scheduler pick it up particular pod : `kubectl get events -o wide`. This will list all the events in the current namespace and look for the scheduled events 
 
 Also I can view the logs of the scheduler : `kubect logs my-custom-scheduler -n kube-system`
+
+## Scheduler Profile 
+
+First when Pods created it end up in the  `Scheduling Queue` . This is where the Pod wait to be scheduled . At this stage pod are sorted base on `Priority` defined on the Pods
+
+Then the Pod enter the `Filter Phase` . This is where Nodes can not run the Pod are filtered out 
+
+Next is the `Scoring Phase` this is where Nodes are scored with different weights . 
+
+- Scheduler associate score to each Node based on the free space that it will have after reserving the CPU required for that Pod
+
+Finally Pod will go to binding phase . This is where the Pod is finally bound to a Node with the highest score . 
+
+All of these operations are achived with certain plugins 
+
+- In `Scheduling Queue`, the `PrioritySort` plugin that sorts the pods in an order based on the priority configured on the Pods . This is how Pods with Priority class get higher Priority over the other Pods when scheduling
+
+- In the `Filtering` stage, the `NodeResourcesFit` that identifies the Node that has sufficent resources required by the Pods and filters out the Node that doesn't
+
+  - Other plugin within this stage is `nodeName` plugin that check if the Pod have a nodeName mentions in the Pods Spec and filter out all the Nodes that does not match this name
+ 
+  - Other Plugin is `NodeUncheduable` plugin that filters out nodes that has the `Unschedulable: true`. Make sure no Pods are set on those Nodes
+ 
+- In the `Scoring phase`, `NodeResourcesFit` plugin associate a score to each node base in the resources available on it and after the pod allocated to it
+
+  - Other plugin is `ImageLocality` plugin associate the high score to the Node that already have the container Image used by the Pods among the different nodes
+ 
+  - At this phase the plugins do not really reject the pod placement on a particular node . For example `ImageLocality` plugin ensure the Pod are place on the Node that already has the Image but if there no Node available, it will anyway place the Pod on the Node that does not even have the image
+ 
+- In `Binding` phase we have `DefaultBinder` plugin that provide the binding mechanism
+
+The highly extensible nature of Kubernetes allow us to customize what plugin go where . And for us to write our own plugin and plug them in there . That achieved with the help of `Extension Points`
+
+At each Stage there is a `Extension Points` for it to which the plugins can plug into
+
+In `Scheduling Queue` we have `QueusortExtention` to which `PrioritySort` plugin to plugged to 
+
+In `Filtering` phase we have Filter Extention
+
+There are extentions before entering the Filter Phase called `preFilter` extension and after filter phase called `postFilter`
+
+There are extentions before entering the Scroing phase called `preScore` extention and after `reserve`
+
+Then `Permit` and `preBind` before Binding Phase adn `bind`, `postBing` after the Binding Phase 
+
+To changed the behavior the default Behavior of how these plugins are called and how we can get our own plugins in there :
+
+-  I can configure `Multiple Profile` within a single Scheduler in the configuration file by adding more entry to the list of `profiles`
+
+To configure scheduler `profiles` to work differently 
+
+```
+apiVersion: kubescheduler.config.k8s.io/v1
+kind: KubeSchedulerConfiguration
+profiles:
+  - schedulerName: my-scheduler-2
+    plugins:
+      score:
+        disabled:
+          - name: TaintToleration
+        enabled:
+          - name: MyCustomPluginA
+          - name: MyCustomPluginB
+  - schedulerName: my-scheduler-3
+    plugins:
+      preScore:
+        disabled:
+          - name: '*'
+      score:
+        disabled:
+          - name: '*'
+  - schedulerName: my-scheduler-4
+```
+
+Docs (https://kubernetes.io/docs/concepts/scheduling-eviction/scheduling-framework/)
+
+
+
+
+
+
+
+
+
+
 
 
 
