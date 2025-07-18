@@ -65,6 +65,8 @@
   - [Static Pod](#Static-Pod)
  
   - [Priority Classes](#Priority-Classes)
+ 
+  - [Multiple Scheduler](#Multiple-Scheduler)
   
 # Kubernetes-CKA-
 
@@ -1031,11 +1033,88 @@ If we have a higher priority job and there are no more resources available on th
 
 To compare the priority Class on both pods using : `kubectl get pods -o custom-columns="NAME:.metadata.name,PRIORITY:.spec.priorityClassName"`
 
+## Multiple Scheduler
 
+If I have specific application that requires its components to be placed on Nodes after performing some addition checks  . 
 
+I can write my own Kubernetes Scheduler Program package it and deploy it as the default scheduler or as an addition shceduler . That ways Applications will go through the default scheduler and some specific Applications that I may choose can use my own custom sheduler 
 
+When there are multiple Scheduler they must have different name so that we can identify them 
 
+To deploy addition scheduler : `wget https://storage.googleapis.com/kubernetes-release/release/v1.12.0/bin/linux/amd64/kube-scheduler`. I will point the configuration to the custom configuration file :
 
+```
+custom-scheduler.yaml
+
+apiVersion: kubescheduler.config.k8s.io/v1
+kind: KubeSchedulerConfiguration
+profiles:
+- schedulerName: my-scheduler-2
+```
+
+- Each scheduler use a separate configuration file and with each file having its own scheduler name .  
+
+Another way is deploy scheduler as a Pod, and specify the kubeconfig property which is the path to the `scheduler.conf` file that has the authentication information to connect to the Kubernetes API server 
+
+- Then I pass `--config=/etc/kubernetes/my-scheduler-config.yaml` as a config option to scheduler
+
+- NOTE : We have the scheduler name specified in the file .
+
+```
+apiVersion: v1
+kind: Pod
+metadata:
+  name: custom-scheduler
+  namespace: kube-system
+spec:
+  containers:
+  - command:
+    - kube-scheduler
+    - --address=127.0.0.1
+    - --kubeconfig=/etc/kubernetes/scheduler.conf
+    - --config=/etc/kubernetes/my-scheduler-config.yaml ## This is how the name got pick up by the scheduler 
+    image: k8s.gcr.io/kube-scheduler-amd64:v1.11.3
+    name: kube-scheduler
+```
+
+Another option in custom-scheduler.yaml is `leaderElection` is used when I have multiple copies of the scheduler running on different master node as a High Availability set up where I have multiple Master Node 
+
+```
+custom-scheduler.yaml
+
+apiVersion: kubescheduler.config.k8s.io/v1
+kind: KubeSchedulerConfiguration
+profiles:
+- schedulerName: my-scheduler-2
+leaderElection:
+  leaderEffect: true
+  resourceNamespace: kube-system
+  resourceName: lock-object-my-scheduler
+```
+
+- If multiple copies of the same scheduler are running on different nodes only 1 can be active at the time that where `leaderElection` choosing the leader who will lead the scheduling activities 
+
+How to deploy Configure Multiple Scheduler docs (https://kubernetes.io/docs/tasks/extend-kubernetes/configure-multiple-schedulers/)
+
+Once we have deployed that custom Scheduler, the next step is to configure a pod or deployment to use this new scheduler . I can configure like this:
+
+```
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+spec:
+  containers:
+  - image: nginx
+    name: nginx
+  schedulerName: my-custom-scheduler ###
+```
+
+- If custom scheduler configure incorrect . The pod will remain in the Pending state 
+
+To know which scheduler pick it up particular pod : `kubectl get events -o wide`. This will list all the events in the current namespace and look for the scheduled events 
+
+Also I can view the logs of the scheduler : `kubect logs my-custom-scheduler -n kube-system`
 
 
 
