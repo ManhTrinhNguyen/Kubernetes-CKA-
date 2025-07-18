@@ -63,6 +63,8 @@
   - [DaemonSet](#DaemonSet)
  
   - [Static Pod](#Static-Pod)
+ 
+  - [Priority Classes](#Priority-Classes)
   
 # Kubernetes-CKA-
 
@@ -974,11 +976,58 @@ Why do we want to use StaticPod ?
 - Start by installing `Kubelet` on all the master Nodes, then create Pod definition files that uses docker images of various control Plane components such as API server, Controller, ETCD, .... Place the definition file in the designated manifest folder and the Kubelet takes care of deploying the Control Plane Components themselves as Pod on the Cluster 
 
 
+## Priority Classes
 
+We need the way to make sure that higher priority workloads always get scheduled without being interrupted by lower priority workloads 
 
+Priority Classes help us to defines priority for different workloads . If the higher Priority Pod cannot be scheduled, it will terminated the lower Priority Pod and make higher Priority Pod happend 
 
+Priority are not within the speicfic namepsace (Cluster Wide)
 
+To define Priority we are using range of numbers : As high as 1000,000,000 and as low as -2,147,483,648 (This range is for Applications and Workloads that are deployed as app in the cluster)
 
+There is a separate range as high as 2,000,000,000 that's dedicate for internal system critical parts (Such as Control Plane) . They alway get highest priority 
+
+To list existing priorityclass : `kubectl get priorityclass`
+
+To create a new priority class: 
+
+```
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: high-priority
+value: 1000000000
+description: "Priority class for mission critical pods" (optional)
+```
+
+To associate Priority Class to Pod by using: `priorityClassName`
+
+```
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+  labels:
+    name: nginx
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    ports:
+    - containerPort: 8080
+  priorityClassName: high-priority
+```
+
+IF I don't specify priority class name for a pod. By default it is assumed to have a priority class value, a priority value of 0 , if I want to modify the default value I must create a new priority class and assign the `globalDefault: true` (It only be defined in a single priority class)
+
+If we have a higher priority job and there are no more resources available on the Cluster . The behavior is defined by the preemption policy defined in the priority class assigned to the new workload
+
+- `preemptionProlicy: PreemptLowerPriority` .
+
+- If preemptionPolicy is not set it default set to `preemptionProlicy: PreemptLowerPriority`. It mean it would kill the lower priority and take its place
+
+- If I don't want it to kill the exsiting workload and instead wait for the cluster resources  to free up then I must set `preemptionProlicy: never`
 
 
 
