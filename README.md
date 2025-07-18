@@ -1029,9 +1029,7 @@ If we have a higher priority job and there are no more resources available on th
 
 - If I don't want it to kill the exsiting workload and instead wait for the cluster resources  to free up then I must set `preemptionProlicy: never`
 
-
-
-
+To compare the priority Class on both pods using : `kubectl get pods -o custom-columns="NAME:.metadata.name,PRIORITY:.spec.priorityClassName"`
 
 
 
