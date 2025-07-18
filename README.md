@@ -929,7 +929,49 @@ Not only it create the Pod it can ensure that the Pod stay alive, if the applica
 
 If I make a change to files on this directory . Kubelet will regenrate the Pod 
 
+If I remove the files from `/etc/kubernetes/manifests` the Pod is deleted automatically 
 
+Kubelet work at Pod level so it can only understand Pod . 
+
+**What is that designated folder and how to configure it ?**
+
+Could be any directory on the host and the location of that directory is passed in to the Kubelet as an option while running the Service 
+
+Option name : `--pod-manifest-path=/etc/Kubetnetes/manifests`
+
+Another way to configure instead of specify the option directly in the kubelet.service file I could provide a path to another config file using `--config` option and then define the directory path as staticPodPath in that file `--config=kubeconfig.yaml` . Cluster set up by the `kube admin` tool uses this approach 
+
+If I am inspecting an existing cluster, I should inspect this option of the kubelet to identify the path to the directory . I will thenknow where to place the definition file for my staticPod 
+
+- First, check the `--option pod-manifest-path` in the kubelet service file . If it is not there then look for the `--config` option and identify the file used as the config file . and then within the config file look for the staticPod option
+
+Once static Pod create I can view it by running the `docker ps` command . Bcs we don't have the Control Plane and kubectl work with `kube-apiserver`
+
+How does it work when the Node is part of a Cluster when there is an API server requesting the kubelet to create Pods . Can kubelet create both kinds of Pods at the same time ? 
+
+- The way kubelet works is it can take in requests for creating Pods from different inputs .
+
+  - First through the Pod definition files (from Static Pod folder)
+ 
+  - Second is through an HTTP API endpoint
+ 
+  - Kubelet can create both kinds of Pods at the same time
+
+Is `API Server` aware of the static Pod created by the Kubelet ? Yes 
+
+- When `Kubelet` create a static Pod, if it is a part of a Cluster, it also creates a mirror object in the `Kube-Apiserver`.
+
+- What I see from kube-apiserver is a read-only mirror of the Pod .
+
+- I can view the Pod but I can not add, edit, or delete like usual Pods . I can only delete them by modify the files from Nodes manifest folder
+
+!!! NOTE: The name of the Pod is automatically appended with the Node name.
+
+Why do we want to use StaticPod ? 
+
+- Since Static Pod is not part of the Control Plane . I can use it to deploy the Control Plane component itself
+
+- Start by installing `Kubelet` on all the master Nodes, then create Pod definition files that uses docker images of various control Plane components such as API server, Controller, ETCD, .... Place the definition file in the designated manifest folder and the Kubelet takes care of deploying the Control Plane Components themselves as Pod on the Cluster 
 
 
 
