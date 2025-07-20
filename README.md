@@ -71,6 +71,8 @@
   - [Scheduler Profile](#Scheduler-Profile)
  
   - [Admission Controllers](#Admission-Controllers)
+ 
+  - [Validating And Mutating Admission Controllers](#Validating-And-Mutating-Admission-Controllers)
   
 # Kubernetes-CKA-
 
@@ -1241,6 +1243,95 @@ spec:
     image: k8s.gcr.io/kube-apiserver-amd64:v1.11.3
     name: kube-apiserver
 ```
+
+## Validating And Mutating Admission Controllers
+
+
+The `NamepsaceExists` or `NamespaceLifecycle` admission controller , It can help validate if a namespace already exists and reject the request if it doesn't exist . This is known as `Validating Admission` controller
+
+Another type of `Admission Controller` is `DefaultStorageClass` . Example I am submitting a request to create a PVC the request go through `Authentication`, `Authorization` and `Admission Controllers` the `DefaultStorageClass Admission Controller` will watch for a request to create a PVC and check if it has a StorageClass mention in it . If not It will modify my request to add the DefaultStorageClass to my request . This one known as `Mutating Admission Controller` 
+
+`Mutating Admission Controller` are those that can change the request 
+
+`Valiadate Admission Controller` are those that can validate the request and allow or deny
+
+There are maybe `Admission Controller` can do both .  
+
+Generally `Mutating Admission Controller` are invoked first followed by `Validating Admission Controller` . This is so that any change made by `Mutating Admission Controller` can be considered during the `Validation process` 
+
+If I want my own `Admission Controller` with my own mutations and validations that has my own logic . To support external `Admission Controllers` there are 2 special `Admission Controllers` available 
+
+- `MutatingAdmissionWebhook`
+
+- `ValidatingAdmissionWebhook`
+
+We can configure these webhooks to point to a Server that's hosted either within the Kubernetes Cluster or outside it, and our server will have our own `Admission Webhook Service` running with our code and logic. After the request go through it hit the webhook that configured . Once it hit a webhook it makes a call to the `Admission Webhook Server` by passing an `AdmissionPreview` object in a JSON format . This Object has all the details about the request, such as the user that made the request, and the type of Operation the user is trying to perform and on what Object and details about the object itself . On receiving the request the admission webhook server response with an `AdmissionReview` object with a result of whether the request is allowed or not . If allowed field set to True then the request is allowed 
+
+To set this up : 
+
+1. Deploy `Admission Webhook Server` which will have our own logic .
+
+2. Then I will configure the Webhook on Kubernetes by creating a webhook Configuration Object 
+
+
+#### Configuration Admission Webhook 
+
+`clientConfig`: This is where we configure the location of our `Admission Webhook Server` . 
+
+- If we deploy this Server externall on our onw and that is not a part of deployment in Kubernetes Cluster then we can provide `url: <>` path to that server
+
+- If we deploy a Server as another Service on our Cluster then we can do . The communication between `API-server` and the `Webhook` server has to be over TLS . So `caBundle` should be configured
+
+`rules`: Is what We must specify when to call our `API Server` . 
+
+- To configure exactly when we want our webhook Server to be called for validation 
+
+```
+apiVersion: admissionregestration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: "pod-policy.example.com"
+webhooks:
+- name: "pod-policy-example.com"
+  clientConfig:
+    url: "https://external-server.example.com" ## This is for External Server
+
+    service: # This is for deploy as another Service in Cluster 
+      namespace: "webhook-namespace"
+      name: "webhook-service"
+    caBundle: "TLS" # Certificate bundle should be configured  
+
+  rules:
+  - apiGroups: [""]
+    apiVersion: ["v1"]
+    operations: ["CREATE"]
+    resources: ["pods"]
+    scope: "Namespaced" 
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
