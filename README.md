@@ -69,6 +69,8 @@
   - [Multiple Scheduler](#Multiple-Scheduler)
  
   - [Scheduler Profile](#Scheduler-Profile)
+ 
+  - [Admission Controllers](#Admission-Controllers)
   
 # Kubernetes-CKA-
 
@@ -1193,13 +1195,52 @@ profiles:
 
 Docs (https://kubernetes.io/docs/concepts/scheduling-eviction/scheduling-framework/)
 
+## Admission Controllers
+
+Admission Controller help us to implement better security measure to enforce how cluster is used 
+
+Apart from simply validating configuration, `Addmission Controller` can suggest change the request itself or perform additional operations before the Pod created 
+
+There are number of `Addmission Controllers` that come prebuilt with Kubernetes such as :
+
+- `AlwaysPullImages`: that ensure everytime pod created image always pulled
+
+- `DefaultStorageClass`: Observes the creation of PVC and automatically adds a default Storage Class to them if one is not specified
+
+- `EventRateLimit` : Help set the limit number of requests with `API-Server` can handle at the time to prevent `API-Servers` become from flooding with requests
+
+- `NamespaceExists`: Reject the requests to namespace does not exist
+
+- `NamespaceAutoProvision` (not enable by default) this will automatically create a namespace it if does not exist 
 
 
+To see a list of `Admission Controller` enabled by default : `kube-apiserver -h | grep enable-admission-plugins`
 
+If I am running this in `kubeadm` based setup I can do : `kubectl exec kube-apiserver-controlplane -n kube-system -- kube-apiserver -h | grep enable-admission-plugins`
 
+To add the addmission controller : on the `/usr/local/bin/kube-apiserver` add flag `--enable-admission-plugins=<admission plugins (could be many)>`
 
+If using `Kubeadm-Based Setup (API Server as a Pod)`
 
-
+```
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  name: kube-apiserver
+  namespace: kube-system
+spec:
+  containers:
+  - command:
+    - kube-apiserver
+    - --authorization-mode=Node,RBAC
+    - --advertise-address=172.17.0.107
+    - --allow-privileged=true
+    - --enable-bootstrap-token-auth=true
+    - --enable-admission-plugins=NodeRestriction,NamespaceAutoProvision ### Admission controller here 
+    image: k8s.gcr.io/kube-apiserver-amd64:v1.11.3
+    name: kube-apiserver
+```
 
 
 
