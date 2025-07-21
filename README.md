@@ -76,7 +76,9 @@
  
 - [Logging and Monitoring](#Logging-and-Monitoring)
 
-  - [Monitor Cluster Component](#Monitor-Cluster-Component) 
+  - [Monitor Cluster Component](#Monitor-Cluster-Component)
+ 
+  - [Managing Application Logs](#Managing-Application-Logs)
   
 # Kubernetes-CKA-
 
@@ -1343,7 +1345,11 @@ Once Processed Cluster Performce can be viewed by running `kubectl top node` (Th
 
 `kubectl top pod` to performance metrics of pods in Kubernetes
 
+## Managing Application Logs
 
+`kubectl logs <pod-name>`
+
+If multiple containers in the Pod `kubectl logs <pod-name> <container-name>`
 
 
 
