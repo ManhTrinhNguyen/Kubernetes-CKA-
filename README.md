@@ -73,6 +73,10 @@
   - [Admission Controllers](#Admission-Controllers)
  
   - [Validating And Mutating Admission Controllers](#Validating-And-Mutating-Admission-Controllers)
+ 
+- [Logging and Monitoring](#Logging-and-Monitoring)
+
+  - [Monitor Cluster Component](#Monitor-Cluster-Component) 
   
 # Kubernetes-CKA-
 
@@ -1309,13 +1313,35 @@ webhooks:
     scope: "Namespaced" 
 ```
 
+## Logging and Monitoring
 
+## Monitor Cluster Component 
 
+I want to know `node-level` metric . Such as number of Nodes in the Cluster, How many of them are healthy . Also Performance metrics such as CPU, Memory, Network, and disk utilization 
 
+I also want to know `pod-level` metrics. Such as number of Pods, CPU and Memory consumption on them
 
+To monitor resoruce consumption on Kubernetes I can use `Metrics Server`
 
+I can have 1 Metrics Server per Kubernetes Cluster . The `Metrics Server` retrieves metrics from each of the Kubenernetes Nodes and Pods, aggregates them and stores them in the memory 
 
+!!! NOTE: `Metric Server` is an only **in-memory** monitoring solution and does not store the metrics on the disk . As the result I can not see historical performance data 
 
+How are the Metrics generated for the pods on these Noodes ? 
+
+- Kubernetes run `Kubelet` on each Node which responsible for receving intructions from `kube API-server` Control Plane and running Pod on the Node
+
+- `Kubelet` also contain sub Component known as `Container Advisor`. `cAdvisor` responsible for retriveing performance metrics from pods and exposing them through the `kubelet API` to make the metrics available for the `Metric Server`
+
+To deploy Metric Server: 
+
+- First I need to clone the Git Metric Server Repo `git clone https://github.com/kubernetes-incubator/metrics-server.git`
+
+- And then I will `kubectl create -f deploy/1.8+/` . This command deploy a set of pods, services, and roles to enable Metrics Server to pull from performence metrics from  the Nodes in the Cluster
+
+Once Processed Cluster Performce can be viewed by running `kubectl top node` (This provide CPU and memory consumption) 
+
+`kubectl top pod` to performance metrics of pods in Kubernetes
 
 
 
