@@ -79,6 +79,10 @@
   - [Monitor Cluster Component](#Monitor-Cluster-Component)
  
   - [Managing Application Logs](#Managing-Application-Logs)
+ 
+- [Application Lifcycle Management](#Application-Lifcycle-Management)
+
+  - [Rolling Update and Rollback](#Rolling-Update-and-Rollback) 
   
 # Kubernetes-CKA-
 
@@ -1351,12 +1355,41 @@ Once Processed Cluster Performce can be viewed by running `kubectl top node` (Th
 
 If multiple containers in the Pod `kubectl logs <pod-name> <container-name>`
 
+## Application Lifcycle Management
 
+## Rolling Update and Rollback
 
+When I first create a Deployment it triggers a `rollout`. 
 
+New `rollout` create a new Deployment Revision 
 
+- In the future if I update the Deloyment the new `Rollout` get triggered and the new Deployment Revision get created
 
+- This help us keep track of our Deployment and Rollback to our previous version of Deployment if necessary 
 
+To see the status of `Rollout` : `kubectl rollout status <Deployment name>`. 
+
+To see the revisions and history of `Rollout`: `kubectl rollout history <Deployment Name>` 
+
+There are 2 types of Deployment Strategy 
+
+- For example I have 5 replicas of my Web app instance deployed . One way to update a newer version is to destroy all of these and then create newer versions of Applications instances . The problem with this is Application Down during the period of time creating a new one
+
+- Second Strategy that we don't destroy all of them at once instead we take down the older version and bring up the newer version one by one
+
+!!! If I am not specify a strategy while creating the deployment, it will assume it to be `Rolling Update` (this is a Default Deployment Strategy)
+
+To see the difference between the recreate and rolling update strategies can also be seen when I view the Deployment in details : `kubectl describe deployment` to see detail information regrading the deployments
+
+**Deployment Upgrades Under the Hood**
+
+When the new Deployment created , Deploy 5 replicas 
+
+- It first create a replicaSet automatically which in turn create the number of pods required to meet a number of replicas
+
+- When I upgrades my application the Kubernetes Deployment create a new ReplicaSet and start deploying the containers there at the same time taking down the Pods in the old ReplicaSet
+
+- Once Upgrade application if something wrong with a new Version Application I can `Rollback` my upgrades : `kubectl rollout undo <deployment name>`
 
 
 
