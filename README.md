@@ -82,7 +82,9 @@
  
 - [Application Lifcycle Management](#Application-Lifcycle-Management)
 
-  - [Rolling Update and Rollback](#Rolling-Update-and-Rollback) 
+  - [Rolling Update and Rollback](#Rolling-Update-and-Rollback)
+ 
+  - [Command and Arguments Docker](#Command-and-Arguments-Docker)
   
 # Kubernetes-CKA-
 
@@ -1390,6 +1392,47 @@ When the new Deployment created , Deploy 5 replicas
 - When I upgrades my application the Kubernetes Deployment create a new ReplicaSet and start deploying the containers there at the same time taking down the Pods in the old ReplicaSet
 
 - Once Upgrade application if something wrong with a new Version Application I can `Rollback` my upgrades : `kubectl rollout undo <deployment name>`
+
+## Command and Arguments Docker
+
+For example I run an Ubuntu Image `docker run ubuntu` it run an ubuntu instance and exit immediately . 
+
+- If I were to list a running container `docker ps` I won't see it
+
+- If I list all container including stopped container `docker ps -a` I will see the ubuntu container in an `Exited State`
+
+- Bcs Unlike Virtual Machine container are not meant to host an OS , container meant to run specific task or process like Application, DB or carry out some computation or analysis. Once task completed the container get exited . The container only live as long as the process inisde it is alive
+
+The `CMD` in Dockerfile define process is run within the container within the container when it starts 
+
+When I ran the Ubuntu container earlier, Docker created the container from the Ubuntu image and launched the bash program, by default Docker does not attach a terminal to a container when it is run and so the bash program does not find the terminal so it exited 
+
+To specify a diffent Command to start a Container 
+
+- Option 1: Append the command to docker command . This way it overrides the defaults command specified within the image Example : `docker run ubuntu sleep 5` (Docker run ubuntu image sleep for 5s then exited)
+
+  - To make that changed permantnent . If I want the Docker image to run sleep command when it starts I would create my image from based Ubuntu Image and specify `CMD`
+ 
+```
+FROM ubuntu
+
+CMD sleep 5
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
