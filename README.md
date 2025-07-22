@@ -87,6 +87,8 @@
   - [Command and Arguments Docker](#Command-and-Arguments-Docker)
  
   - [Commands and Arguments in Kubernetes](#Commands-and-Arguments-in-Kubernetes)
+ 
+  - [ConfigMap](#ConfigMap)
   
 # Kubernetes-CKA-
 
@@ -1489,13 +1491,15 @@ spec:
     args: ["10"]
 ```
 
+## ConfigMap
 
+ConfigMap is use to pass configuration data in the form of key-value pair in Kubernetes 
 
+To create Configmap using kubectl `kubectl create configmap [configmap-name]  --from-literal=APP_COLOR=blue`
 
+- `--from-literal` : is use to specify the Key=Value pair in the command itself . If I want to create another Key=Value pair I can create multiple `--from-literal` multiple times
 
-
-
-
+Another ways is to input configuration data is through the file . `kubectl create configmap [configmap-name] --from-file=app_config.properties`
 
 
 
