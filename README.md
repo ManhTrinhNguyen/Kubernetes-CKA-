@@ -89,6 +89,8 @@
   - [Commands and Arguments in Kubernetes](#Commands-and-Arguments-in-Kubernetes)
  
   - [ConfigMap](#ConfigMap)
+ 
+  - [Secret](#Secret)
   
 # Kubernetes-CKA-
 
@@ -1501,7 +1503,27 @@ To create Configmap using kubectl `kubectl create configmap [configmap-name]  --
 
 Another ways is to input configuration data is through the file . `kubectl create configmap [configmap-name] --from-file=app_config.properties`
 
+## Secret 
 
+To create Secret : `kubectl create secret generic --from-literal=[key]=[value]`
+
+Another ways is to use : `kubectl create secret generic --from-file=[path-to-file]`
+
+To encode Secret Value `echo -n [secret-value] | base64`
+
+To decode Secret Value  echo -n [secret-encoded-value] | base64 decode`
+
+To mount Secret as a Volume in the Pod . Each attribute in the Secret is created as a file with the value of the secret as its content 
+
+- If we have 3 attribute in the Secret . 3 files will be created
+
+Docs for Encrypted Data At Rest (https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data/)
+
+##  Secret Store CSI Driver
+
+(https://www.youtube.com/watch?v=MTnQW9MxnRI)
+
+## Encrypting Secret Data at Rest
 
 
 
