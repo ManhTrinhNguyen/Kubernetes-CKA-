@@ -85,6 +85,8 @@
   - [Rolling Update and Rollback](#Rolling-Update-and-Rollback)
  
   - [Command and Arguments Docker](#Command-and-Arguments-Docker)
+ 
+  - [Commands and Arguments in Kubernetes](#Commands-and-Arguments-in-Kubernetes)
   
 # Kubernetes-CKA-
 
@@ -1414,19 +1416,78 @@ To specify a diffent Command to start a Container
   - To make that changed permantnent . If I want the Docker image to run sleep command when it starts I would create my image from based Ubuntu Image and specify `CMD`
  
 ```
+# ubuntu-sleeper
+
 FROM ubuntu
 
 CMD sleep 5
 ```
+- To change a number of second : `docker run ubuntu-sleeper sleep 10`
 
+If I want to pass in only the number of second the container should sleep like this : `docker run ubuntu-sleeper 10` . I can use the `ENTRY POINT` instead of `CMD`
 
+- `ENTRY POINT` instruction is like `CMD` I can specify the program that will be run when the container starts . Whatever I specify in the command line it will be appended to the `ENTRY POINT`
 
+To configure a default value for the command if one was not specified in the command line I can use both `ENTRY POINT` and `CMD`
 
+```
+# ubuntu-sleeper
 
+FROM ubuntu
 
+ENTRYPOINT ["sleep"]
+ 
+CMD ["5"]
+```
 
+- In this case the CMD instruction will be appended to the entrypoint instruction
 
+!!! NOTE : Should alway specify the `ENTRY POINT` and `CMD` in the JSON format 
 
+To modify `ENTRY POINT` during runtime I can override it `docker run --entrypoint sleep2.0 ubuntu-sleeper 10`
+
+## Commands and Arguments in Kubernetes
+
+To specify additional argument in the pod definition file :
+
+- Anything that is appended to the `docker run` command will go into `args: ["10"]` in the pod definition file
+
+```
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ubuntu-sleeper-pod
+spec:
+  containers:
+  - name: ubuntu-sleeper
+    image: ubuntu-sleeper
+    args: ["10"]
+```
+
+To relate that to the Dockerfile we created earlier . The Dockerfile has an `ENTRYPOINT` as well as a `CMD` specified
+
+- The `ENTRYPOINT` is the command that is run at startup
+
+- `CMD` is a default parameter passed to the command
+
+With the `args` options in the Pod definition file, we override the `CMD` instruction in the Dockerfile 
+
+If I need to override the `ENTRYPOINT` I can use `command: ["sleep2.0"]`
+
+- The `command` corresponds to `ENTRYPOINT`
+
+```
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ubuntu-sleeper-pod
+spec:
+  containers:
+  - name: ubuntu-sleeper
+    image: ubuntu-sleeper
+    command: ["sleep2.0"]
+    args: ["10"]
+```
 
 
 
