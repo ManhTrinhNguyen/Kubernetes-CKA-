@@ -1578,6 +1578,60 @@ After we create our Pod Spec and then we actually deploy it to Kubernetes what w
 
 <img width="600" height="569" alt="Screenshot 2025-07-23 at 12 51 46" src="https://github.com/user-attachments/assets/b9f07f5f-11a8-42aa-9361-40d910233743" />
 
+
+### AWS Secret Manager 
+
+I will go to AWS Secret Manager UI to create my secret 
+
+- Click Store new Secret -> Choose Other type of Secret -> Then I will put my Secrets as /Key Value pair 
+
+Secret Store CSI Driver Docs (https://secrets-store-csi-driver.sigs.k8s.io/)
+
+I will use Helm to install CSI Driver . See in the Docs 
+
+To see `CRD` that provided by CSI Driver Helm Chart I can do : `kubectl get crd -n kube-system`
+
+```
+secretproviderclasses.secrets-store.csi.x-k8s.io      
+secretproviderclasspodstatuses.secrets-store.csi.x-k8s.io
+```
+
+I the docs I can see some `Optional Values` 
+
+- `Sync as Kubernetes Secret` What it does is it will create a Kubernetes Secret and keep it synced up with the Secret that is in AWS 
+
+- `Secret Auto rotation`: Anytime I make change in the Secret Store it will continuously pull the Secret Store to see if there is any changes and then update Secret within my Pod accordingly
+
+Set up AWS intergration with the Secret Store CSI driver (https://github.com/aws/secrets-store-csi-driver-provider-aws)
+
+The way that the AWS Provider works in The Secret Store CSI driver is that it allows us to do is actually bind in a to a Kubernetes `ServiceAccount` . That's specifically with EKS Cluster 
+
+First I will create my Policy : I will go to IAM -> Policy -> Secret Manager -> Choose READ -> Describe Secret and GetSecret Value -> Specify Resources -> Region us-west-1 | Secret my-db-creds 
+
+Second I have to create an IAM `ServiceAccount` this will bind that iam policy to `ServiceAccount` that exists on our Kubernetes Cluster so it will create `Service Account` and then assign the necessary permission that way our Pod can then retrieve the Secrets from AWS : `eksctl create iamserviceaccount --name api-sa --region=us-west-1 --cluster eks-cluster --attach-policy-arn arn:aws:iam::660753258283:policy/csi-eks-access-secrets-manager --approve --override-existing-serviceaccounts` 
+
+- To see that Service Account : `kubectl get sa`
+
+Now I will configure Secret Store CSI driver to talk to AWS by using : `SecretProviderClass`
+
+```
+apiVersion: secrets-store.csi.x-k8s.io/v1
+kind: SecretProviderClass
+metadata:
+  name: db-aws-secrets
+spec:
+  provider: aws
+  parameters:
+    objects: |
+      - objectName: "my-db-creds"
+        objectType: "secretsmanager"
+```
+
+
+
+
+
+
 ## Encrypting Secret Data at Rest
 
 
