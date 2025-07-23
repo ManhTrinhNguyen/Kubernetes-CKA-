@@ -1523,6 +1523,61 @@ Docs for Encrypted Data At Rest (https://kubernetes.io/docs/tasks/administer-clu
 
 (https://www.youtube.com/watch?v=MTnQW9MxnRI)
 
+If want to use tools like Vault, AWS Secret Manager ... I have to use the Secret Store CSI Driver to pull those Secret into my Native Kubernetes 
+
+Secret Store CSI Driver synchronizes Secrets from external APIs and mounts them into containers as `Volumes` 
+
+I don't need to worry about checking Secrets into Git 
+
+The main Advandtage of use Secret Store CSI Driver is we No longer store Credentials in Kubernetes Secrets 
+
+If I use external `Secrets Operators` or `Seal Secret` what will happen is we will grap our Secret from a Central Secret Store and I will sync it with Kubernetes Secret 
+
+With the Secret Store CSI Driver I don't actually create a Kubernetes Secret . It just going to pull it dynamically from my Central Secret Store 
+
+- The benefit of when we don't create a Kubernetes Secret is minimize attack surface as much as possible
+
+- Great from a compliance and regulatory perspective 
+
+How does Secret CSI Driver work ? 
+
+We will use Helm to install CSI Driver . 
+
+What it will install ? 
+
+- A couple of `CRD` 
+
+Let's say I have my Secrets store in AWS Secrets Manager . I have to tell Secret store CSI Driver what Secret do I want synced and how do we actually access those Secrets .
+
+- So I can use the CRD provided by Helm Chart called `SecretProviderClass`
+
+```
+apiVersion: secrets-store.csi.x-k8s.io/v1
+kind: SecretProviderClass
+metadata:
+  name: db-secrets
+spec:
+  provider: aws
+  parameters:
+    objects: |
+      - objectName: "db-creds"
+        objectType: "secretmanager"
+```
+
+<img width="600" height="689" alt="Screenshot 2025-07-23 at 12 39 44" src="https://github.com/user-attachments/assets/48f6120a-b496-410c-be44-838b53d4f940" />
+
+- Next we have to create our podspec and basically tell the Pod that we want this specific Secret mounted within the container within that Podspec .
+
+- In my Pod Spec I will create a Volume like normal  
+  
+<img width="600" height="666" alt="Screenshot 2025-07-23 at 12 42 42" src="https://github.com/user-attachments/assets/5087a177-eb16-4552-8edb-fbd201abe5d4" />
+
+- `secretProviderClass : db-secrets` : This name reference from the name of the `SecretProviderClass` . This say like Whatever Secret we pull from AWS by using `SecrectProviderClass` I want to mount that in the specific container
+
+After we create our Pod Spec and then we actually deploy it to Kubernetes what will happen is the `Kubelet` is responsible for create that Pod and it will see that we want a volume created and so it will talk to that Secret Store CSI Driver bcs it see the configuration for that, the CSI then see configuration of that and see that it points to the Secret Provider, Then the `SecretProvider` will talk to AWS to get the value of the Secrets and return to CSI Driver and now we can create our pod and the CSI is going to Mount the Volume onto that Pod and that volume will contain the Secret 
+
+<img width="600" height="569" alt="Screenshot 2025-07-23 at 12 51 46" src="https://github.com/user-attachments/assets/b9f07f5f-11a8-42aa-9361-40d910233743" />
+
 ## Encrypting Secret Data at Rest
 
 
