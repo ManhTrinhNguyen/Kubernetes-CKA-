@@ -95,6 +95,10 @@
   - [Multi Container](#Multi-Container)
  
   - [Multi container Design Pattern](#Multi-container-Design-Pattern)
+ 
+  - [AutoScaling](#AutoScaling)
+ 
+  - [Horizontal Pod AutoScaler](#Horizontal-Pod-AutoScaler)
   
 # Kubernetes-CKA-
 
@@ -1775,6 +1779,117 @@ spec:
     command: 'set-up-log-shipper.sh'
     restartPolicy: always
 ```
+
+## AutoScaling
+
+When the loads increases and run out of existing resources on the Server . We need to scale up the Server by took down the Application and added more CPU or Memory resources to it and then powered it back up (Vertical Scaling)
+
+If the application supported running in multiple instances, another thing we could have done is we could have avoided having to shut down the Server . We could add more Server to it and shared load between them (Horizontal Scaling)
+
+One of the major purposes of Kubernetes is to host applications in the form of Containers and scale up and down based on demand `(Scaling Workloads)` . 
+
+Another Scale is `Scaling the Underlying Cluster` itself so this is adding or removing more Servers 
+
+There are two ways of Scaling those `(Scaling Workloads)` and `Scaling the Underlying Cluster` so that is Horizontal and Vertical Scaling 
+
+`Scaling Cluster Infra`: 
+
+- Horizontal Scaling refers to adding more Nodes to the Cluster
+
+- Vertical Scaling refer to increasing resources to Nodes in the Cluster
+
+
+`Scaling Workloads`:
+
+- Horizontal Scaling refer to creating more pods
+
+- Vertical Scaling refer to increasing resources allocated to existing Pods 
+
+There are 2 ways of Scaling : `Manual way` and `Automated way`
+
+Manual way of Horizontal Scaling Cluster Infra would be to provision manually provision new Nodes and then use the `kubeadm join ` command to add new Node to the Cluster 
+
+Manual way to Horizontal Scaling Workloads is to run `kubectl scale ` to scale up or down the number of Pods 
+
+Manual way to Vertical Scaling Workload is to run `kubectl edit ` command to go in to that Deployment or StatefulSet or ReplicaSet and change the Resource Limits and Request associated with the Pods 
+
+Automate way of Horizontal Scaling Infra is `Kubernetes Cluster Autoscaler`
+
+Automate way of Horizontal Scaling Workloads is `Horizontal Pod Autoscaler`
+
+Automate way of Veritcal Scaling Workloads is `Vertical Pod AutoScaler`
+
+## Horizontal Pod AutoScaler 
+ 
+To monitor the resource consumption of the Pod `kubectl top pod <my-app-pod>` (Must have Metrics Server) to be able to monitor Pod Resource
+
+To manual way to scale a Workload  : `kubectl scale deployment my-app --replicas=3` (Not Recommended)
+
+I will use Horizontal Pod Autoscaler to continue monitor the Metrics as we did manually using the `top` command. It the automatically increase or decrease the number of pods in a Deployment, StatefulSet base on the CPU memory or custom metrics and this balance the Thresholds and also track multiple different types of metrics 
+
+To configure Horizontal Pod Autoscaler by running the `kubectl autoscale deployment my-app --cpu-percent-50 --min=1 --max=10`. With this command Kubernetes will create a Horizontal Pod AutoScaler for this Deployment that first read the limits configure on the Pod, it thencontinuously pulls the metrics server to monitor usage, and when the usage goes beyond 50% it mofiies the number of replicas to scale up or down (This is a imperative approach)
+
+To view status of HPA : `kubectl get hpa`
+
+- The `Targets` colume show the current CPU usage
+
+To delete HPA : `kubectl delete hpa my-app`
+
+To create HPA with Declarative approach . Create HPA Definition file with APIversion 
+
+```
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: my-app-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: my-app
+  minReplicas: 1
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 50
+```
+
+`scaleTargetRef`: This is the target Resource we want the HPA to monitor 
+
+`min and max` replicas
+
+NOTE : `HPA` relies on the Metric Server 
+
+Custom Metric Adapter that can retrieve information from other internal soruces like workload deployed in a Cluster 
+
+External soruces such as : Datadog, dynatrace 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
