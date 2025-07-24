@@ -99,6 +99,8 @@
   - [AutoScaling](#AutoScaling)
  
   - [Horizontal Pod AutoScaler](#Horizontal-Pod-AutoScaler)
+ 
+  - [In place Resize Pod](#In-place-Resize-Pod)
   
 # Kubernetes-CKA-
 
@@ -1868,8 +1870,35 @@ Custom Metric Adapter that can retrieve information from other internal soruces 
 
 External soruces such as : Datadog, dynatrace 
 
+## In place Resize Pod
 
+If I changed Resource Requirement of a Pod in a Deployment the default behavior is to delete the existing Pod then spin up a new Pod with new changes 
 
+There is an improvement worked upon called `In-place update of resources`. This is a feature currently in alpha . Not enable by default . 
+
+To enable this feature : `FEATURE_GATES=InPlacePodVerticalScaling=true` . Once this is enable the Pod defination support a set of resize policy parameter 
+
+```
+resizePolicy:
+- resourceName: cpu
+  restartPolicy: NotRequired
+- resourceName: memory
+  restartPolicy: RestartContainer
+```
+
+`resizePolicy` option allow me to specify a restart policy for each resource. We have defined that a change in CPU resources will not require the Pod to be restart 
+
+Limitation :
+
+- Only work for CPU and Memory resources
+
+- Pod QoS Class can not be changed
+
+- InitContainer and Ephemeral can not be resize
+
+- Resource requests and limits cannot removed once set
+
+- A container's memory limit may not be reduced below its usage. If a request puts a container in this state, the resize status will remain in InProgress until the desired memory limit become feasible 
 
 
 
