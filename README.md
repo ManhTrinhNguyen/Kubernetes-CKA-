@@ -91,6 +91,10 @@
   - [ConfigMap](#ConfigMap)
  
   - [Secret](#Secret)
+ 
+  - [Multi Container](#Multi-Container)
+ 
+  - [Multi container Design Pattern](#Multi-container-Design-Pattern)
   
 # Kubernetes-CKA-
 
@@ -1693,6 +1697,84 @@ To get a values file of the csi driver helm chart : `helm show values secrets-st
 When I have a values.yaml file I will set `enableSecretRotation: True`
 
 Then I will upgrade a Helm `helm upgrade <name-release> <name-of-chart> --values values.yaml -n kube-system`
+
+## Multi Container
+
+We need one web Server per main app instance pair together so they can scale up and down together that's why we have multi container Pod that share the same lifecycle 
+
+- They share the same network space
+
+- They can refer to each other as localhost
+
+- They can share the same storage volume
+
+```
+apiVersion: v1
+kind: Pod
+metadata:
+  name: simple-webapp
+spec:
+  containers:
+  - name: web-app
+    image: web-app
+    ports:
+      - containerPort: 8080
+  - name: main-app
+    image: main-app
+    ports:
+      - containerPort: 3000 
+```
+
+## Multi container Design Pattern 
+
+The original form of Multi Container : As simple as 2 containers running in the same Pod . Usually use when 2 containers are depend on each other 
+
+Next we have `initContainer`: This used when there are initilazion step need to perform when a Pods start before the Main Application itself 
+
+- For example there could be a `initContainer` that wait for the DB ready before starting the main application . The `initContainer` start it job and end its job and then main application start
+
+Next we have `Side Car Container`: Sidecar container is set up like a `initContainer` where the sidecar start first, does its job but instead of ending, its continue to run throughout the life cycle of the pod . The main container Start after the side car container start 
+
+- This is useful when I have a logs shipper of sorts that needs to be run along with the main application that need to start before the main app start continue to run after the main app run and end after the main app end 
+
+Example of `initContainer`
+
+```
+apiVersion: v1
+kind: Pod
+metadata:
+  name: simple-webapp
+spec:
+  containers:
+  - name: web-app
+    image: web-app
+    ports:
+      - containerPort: 8080
+  initContainers:
+  - name: busy-box
+    image: busybox
+    command: 'wait-for-db-to-run.sh'
+```
+
+Example of `Side Car Container`
+
+```
+apiVersion: v1
+kind: Pod
+metadata:
+  name: simple-webapp
+spec:
+  containers:
+  - name: web-app
+    image: web-app
+    ports:
+      - containerPort: 8080
+  initContainers:
+  - name: log-shipper
+    image: log-shipper
+    command: 'set-up-log-shipper.sh'
+    restartPolicy: always
+```
 
 
 
