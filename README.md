@@ -101,6 +101,8 @@
   - [Horizontal Pod AutoScaler](#Horizontal-Pod-AutoScaler)
  
   - [In place Resize Pod](#In-place-Resize-Pod)
+ 
+  - [Vertical Pod Autoscalser](#Vertical-Pod-Autoscalser)
   
 # Kubernetes-CKA-
 
@@ -1900,16 +1902,53 @@ Limitation :
 
 - A container's memory limit may not be reduced below its usage. If a request puts a container in this state, the resize status will remain in InProgress until the desired memory limit become feasible 
 
+## Vertical Pod Autoscalser
 
+To monitor the Pod consumption resource : `kubectl top pod my-app-pod`
 
+To scale the Pod Vertically : `kubectl edit deployment my-app`. I will change the resoures limit and requests . It will kill the Pod and create a new Pod 
 
+Vertical Autoscaler will continuously monitors the metrics and then it automatically increase or decrease the resource  assigned to the Pod in the Deployment and then Balance the Workload 
 
+Vertical autoScaler does not come built-in 
 
+To apply Vertical Pod Autoscaler : `$ kubectl apply -f https://github.com/kubernetes/autoscaler/releases/latest/download/vertical-pod-autoscaler.yaml`
 
+To see the Pods `kubectl get pods -n kube-system | grep vpa`
 
+The VPA deployment consist of multiple components : `VPA Admission Controller`, `VPA Updater`, `VPA Recommender`
 
+`VPA Recommender` : responsible for continuously monitoring resource usage from the Kubernetes metrics API and collect historical and live usage data for pods and then provide recommendation on optimal CPU memory values (Only suggest changes)
 
+`VPA Updater`: Detect Pod that are running with suboptimal resources and evicts them when update is need . It get information from Recommender and monitor the Pod and If the Pod need to be updated, it evict them 
 
+`VPA Admission Controller` intervenes the Pod creation process and uses the recommendation from the Recommender to then mutate the pod spec to apply the recommended CPU and memory value at startup . This ensure the newly created pods with the correct resource requests
+
+```
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: my-app-vpa
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: my-app
+  updatePolicy:
+    updateMode: "Auto"
+  resourcePolicy:
+    containerPolicies:
+      - containerName: "my-app"
+        minAllowed:
+          cpu: "250m"
+        maxAllowed:
+          cpu: "2"
+        controlledResources: ["cpu"]
+```
+
+`kubectl describe vpa my-app-vpa`
+
+When to use which Horizontal and Vertical 
 
 
 
