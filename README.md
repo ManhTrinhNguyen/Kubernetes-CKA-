@@ -1627,14 +1627,72 @@ spec:
         objectType: "secretsmanager"
 ```
 
-
-
-
+This is my example Deployment 
 
 
 ## Encrypting Secret Data at Rest
 
+```
+kind: Service
+apiVersion: v1
+metadata:
+  name: nginx-irsa-deployment
+  labels:
+    app: nginx-irsa
+spec:
+  selector:
+    app: nginx-irsa
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-irsa-deployment
+  labels:
+    app: nginx-irsa
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx-irsa
+  template:
+    metadata:
+      labels:
+        app: nginx-irsa
+    spec:
+      serviceAccountName: api-sa-allow-all
+      volumes:
+      - name: secrets-store-inline
+        csi:
+          driver: secrets-store.csi.k8s.io
+          readOnly: true
+          volumeAttributes:
+            secretProviderClass: "db-aws-secret"
+      containers:
+      - name: nginx-irsa-deployment
+        image: nginx
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: secrets-store-inline
+          mountPath: "/mnt/secrets-store"
+          readOnly: true
+```
 
+Now let's say I have to change my DB password 
+
+- I go to my AWS Secret Manager -> My Secret - and Edit my password . But the Secret will not automatically update in my Kubernetes Pod
+
+To make a Kubernetes automatically update my Secret I will use `Secret Auto Rotation`. This will continuously monior AWS and see that if there is a change in my AWS Secret it will automatically update for me .
+
+To get a values file of the csi driver helm chart : `helm show values secrets-store-csi-driver/secrets-store-csi-driver >> values.yaml`
+
+When I have a values.yaml file I will set `enableSecretRotation: True`
+
+Then I will upgrade a Helm `helm upgrade <name-release> <name-of-chart> --values values.yaml -n kube-system`
 
 
 
