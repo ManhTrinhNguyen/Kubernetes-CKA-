@@ -103,6 +103,10 @@
   - [In place Resize Pod](#In-place-Resize-Pod)
  
   - [Vertical Pod Autoscalser](#Vertical-Pod-Autoscalser)
+ 
+- [Cluster Maintainence](#Cluster-Maintainence)
+
+  - [OS Upgrade](#OS-Upgrade) 
   
 # Kubernetes-CKA-
 
@@ -1950,10 +1954,39 @@ spec:
 
 When to use which Horizontal and Vertical 
 
+## Cluster Maintainence
 
+## OS Upgrade
 
+What happen when the Nodes gone down ? 
 
+- The Pods on them will now accessible . Users will be impacted
 
+- For example If that Pod only run in that Node users will be impacted
+
+- If the Node come back online immediately the `kubelet` process starts and the Pod come back online . However If the Nodes down for more than 5 mins then the Pods are terminated from that Node . Kubernetes consider them as dead .
+
+- If the Pod were part of ReplicaSet then they are recreated on other Nodes the time to wait for the Pod to come back online is known as the `Pod-eviction-timeout` and it set in the `Controller Manager` : `kube-controller-manager --pod-eviction-timeout=5m0s` . So whenever the Node goes offline, The master Node wait for 5 mins before consider the Node dead
+
+- When the Nodes come back online after `Pod-eviction-timeout` it come back blank without any Pod sheduler on it
+
+- If the Pod not part of ReplicaSet it just gone .
+
+- Thus If I have maintainence task to be performed on a Node . If I do not know if the Node back up online in 5 mins, I can not for sure say I will be back at all
+
+The Safer way to do it is drain of all the Workloads so that Workloads are moved to other Nodes in the Cluster : `kubectl drain node-1`
+
+- When I drain the Node the Pod gracefully termiated from the Node that they are on and recreated on another
+
+- The Node is also cordoned or marked as unschedule, meaning no Pod can be schedule on this Node untill specifically remove the restriction .
+
+- Now the Pod are safe on the other Nodes I can reboot the First Node
+
+- When it comeback online it is still unchedulable then I need to `kubectl uncordon node-1` so the Pod can schedule on this Node .
+
+- The Pod that are moved to other Nodes don't automatically fall back 
+
+`kubectl cordon node-1` simple mark the Node unscheduable . It does not termiate or move the Pod to an existing Node It just make sure new Pod not shedule on that Node 
 
 
 
