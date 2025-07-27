@@ -2038,13 +2038,31 @@ Now I will upgrade the Worker Nodes .
 
 ## Demo Cluster Upgrade
 
+Docs to upgrade the Cluster (https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade/)
+
+Docs to install `kubeadm` (https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/#installing-kubeadm-kubelet-and-kubectl)
+
 To see what distribution my servers are using : `cat /etc/*release*`
 
+Download the public signing key for the Kubernetes package repositories. : `curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.33/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg`
 
+Add the appropriate Kubernetes `apt` repository.: `echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.33/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list`
 
+Upgrade kubeadm: 
 
+```
+sudo apt-mark unhold kubeadm && \
+sudo apt-get update && sudo apt-get install -y kubeadm='1.33.0-*' && \
+sudo apt-mark hold kubeadm
+```
 
+Upgrade `kubelet` and `kubectl`: 
 
+```
+sudo apt-mark unhold kubelet kubectl && \
+sudo apt-get update && sudo apt-get install -y kubelet='1.33.0-*' kubectl='1.33.0-*' && \
+sudo apt-mark hold kubelet kubectl
+```
 
 
 
