@@ -106,8 +106,14 @@
  
 - [Cluster Maintainence](#Cluster-Maintainence)
 
-  - [OS Upgrade](#OS-Upgrade) 
-  
+  - [OS Upgrade](#OS-Upgrade)
+ 
+  - [Kubernetes Release](#Kubernetes-Release)
+ 
+  - [Cluster Upgrade Process](#Cluster-Upgrade-Process)
+ 
+  - [Demo Cluster Upgrade](#Demo-Cluster-Upgrade)
+
 # Kubernetes-CKA-
 
 ## Kodeloud Note 
@@ -1987,6 +1993,62 @@ The Safer way to do it is drain of all the Workloads so that Workloads are moved
 - The Pod that are moved to other Nodes don't automatically fall back 
 
 `kubectl cordon node-1` simple mark the Node unscheduable . It does not termiate or move the Pod to an existing Node It just make sure new Pod not shedule on that Node 
+
+## Kubernetes Release
+
+## Cluster Upgrade Process 
+
+The components can be at diffent release versions  
+
+`Kube-Apiserver` is a primary Component in the Control Plane bcs that is a Components that other Componets talk to . None of others Components should be in a higher Version than `Kube-Apiserver`
+
+If `Kube-Apiserver` = `X` -> `Controller Manager` and `Kube-scheduler` can be = `X - 1` -> and `Kubelet` and `Kube-proxy` can be = `X - 2`
+
+But `kubectl` can be higher or lower than `Kube-ApiServer` 
+
+This permissible skew in Versions allow us to carry out live upgrades. We can upgrade component by component if required 
+
+I should Upgrade when: 
+
+- Let's say I'm at 1.10, Kubernetes release versions 1.11 and 1.12. At any time, Kubernetes support only up to the recent 3 minor versions . So if v1.12 is a latest Kubernetes support v1.11 and v1.10 and v1.12 . So before v1.13 release would be a good time to upgrade Cluster to the next Release 
+
+ To upgrade as kuadm: 
+
+ - The recommend approach is to upgrade 1 minor version at the time
+
+ - I have a cluster with master and worket nodes, running in Production, hosting Pods. serving users . The Nodes and components are at version 1.10 . Upgrade Cluster invole 2 major steps
+
+ - First upgrade Master Node and then upgrade Worker Node
+
+`kubeadm` has an upgrade command that helps in upgrading Cluster `kubeadm upgrade plan` (`kubeadm` not install or upgrade `kubelet`)
+
+To update `kubeadm` version `apt-get upgrade -y kubeadm=1.12.0-00`
+
+Then upgrade the Cluster using : `kubeadm upgrade apply v1.12.0`. It pull the nessesary image and upgrades the Cluster components 
+
+If I run `kubectl get nodes` I still see master node at `1.11` bcs in the output of this command, it is showing the versions of `kubelets` on each of these nodes registered with the `API server` 
+
+Next we should upgrade `kubelet`. Cluster deployed using `kubeadm` has `kubelets` deploy on master node : `apt-get upgrade -y kubelet=1.12.0-00` Once the package upgraded restart the `kubelet` service `systemctl restart kubelet`
+
+Now I will upgrade the Worker Nodes . 
+
+- First I need to move the work loads from first Worker Node to the other Nodes : `kubectl drain node-1` . Then upgrade the `kubeadm` : `apt-get upgrade -y kubeadm=1.12.0-00`  then upgrade the `kubelet`: `apt-get upgrade -y kubelet=1.12.0-00`. And then update the Node configuration for the new kubelet version `kubeadm upgrade node config --kubelet-version v1.12.0` then Restart the `kubelet` service : `systemctl restart kubelet` then `uncordon` the node : `kubectl uncordon node-1`
+
+!!! Note: Not nessessary that the Pods come right back to this Node . It is only marked as scheduable . Only when the Pods are deleted from the other nodes or when new pods are scheudled 
+
+## Demo Cluster Upgrade
+
+To see what distribution my servers are using : `cat /etc/*release*`
+
+
+
+
+
+
+
+
+
+
 
 
 
