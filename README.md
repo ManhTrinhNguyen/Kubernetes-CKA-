@@ -113,6 +113,10 @@
   - [Cluster Upgrade Process](#Cluster-Upgrade-Process)
  
   - [Demo Cluster Upgrade](#Demo-Cluster-Upgrade)
+ 
+  - [Backup and Restore Method](#Backup-and-Restore-Method)
+ 
+  - [Working with ETCDCTL and ETCDUTL](#Working-with-ETCDCTL-and-ETCDUTL)
 
 # Kubernetes-CKA-
 
@@ -2064,13 +2068,109 @@ sudo apt-get update && sudo apt-get install -y kubelet='1.33.0-*' kubectl='1.33.
 sudo apt-mark hold kubelet kubectl
 ```
 
+## Backup and Restore Method 
+
+`ETCD` cluster is all cluster-related information is stored . If my applications are configured with persistent storage then that os another candidate for backups 
+
+We used the `Declarative Approach` by create the defination `yaml` file then running the `kubectl apply -f` (Recommended)
+
+- With this approach I have all the Objects required for single Application in the form of object definition files in a single folder . This can be reuse
+
+- I must have a copy of these files saved at all times . Good practice is to store these on Souce code like  Github .
+
+- Source code Repo should be configured with the right backup Solutions with managed or public source code Repositories like Github I don't have to worry about it
+
+- With that even when I loose my entire Cluster I can redeploy my application on the cluster by simoly applying these configuration files on them 
+
+A better approach to backing up resource configuration is to query the KubeAPI server : `kubectl get all --all-namespaces -o yaml >> all-deploy-services.yaml`
+
+- There are tools like Velero by Heptio they  can help taking backups of my Kubernetes Cluster using the Kubernetes API 
+
+**Back up ETCD**
+
+ETCD Cluster store information about the state of my Cluster . Instead of backing up resource as before, I may choose to backup the `ETCD` server itself 
+
+The `ETCD` Cluster is hosted in Master Nodes . While configuring `ETCD` we specified a location where all the data would be stored, the data directory `--data-dir=/var/lib/etcd` This is a directory that can be configured to be backed up by my backup tool 
+
+`ETCD` come with `built-in` snapshot solution 
+
+- To take snapshot of ETCD database : `etcdctl snapshot save snapshot.db`
+
+- To view a status of the backup : `etcdctl snapshot status snapshot.db`
+
+To restore the Cluster from backup
+
+- First stop the kube-apiserver : `service kube-apiserver stop` as the restore process will require me to restart the etcd cluster and the `kube-api`server depends on it
+
+- Then run `etcdctl snapshot restore snapshot.db --data-dir /var/lib/etcd-from-backup`
+
+When etcd restores from a backup it initialize a new cluster configuration and configures the memebers of etcd as new members to a new Cluster this to prevent a new member from accidentally join a new cluster 
+
+We then configure the etcd configuration file to use a new data directory : `--data-dir=/var/lib/etcd-from-backup`
+
+Then reload the service daemon `systemctl daemon-reload` then restart `service stcd restart`
+
+Finally start kube-api service : `service kube-apiserver start`
+
+NOTE : With all the etcd command 
+
+- Remember to specify the certficate files for authentication
+
+- Specify the endpoint to the etcd cluster and CS certificate
+
+- the etcd server certificate and the key
+
+## Working with ETCDCTL and ETCDUTL
+
+(https://www.udemy.com/course/certified-kubernetes-administrator-with-practice-tests/learn/lecture/18478622#overview)
 
 
+/etc/kubernetes/pki/etcd/server.crt
 
+/etc/kubernetes/pki/etcd/ca.crt
 
+/etc/kubernetes/pki/etcd/server.key
 
+```
+etcdctl \
+--endpoints=https://127.0.0.1:2379 \
+--cacert=/etc/kubernetes/pki/etcd/ca.crt \
+--cert=/etc/kubernetes/pki/etcd/server.crt \
+--key=/etc/kubernetes/pki/etcd/server.key \
+snapshot save /opt/snapshot-pre-boot.db
+```
 
+```
+etcdctl snapshot restore /opt/snapshot-pre-boot.db \
+--endpoints=https://127.0.0.1:2379 \
+--cacert=/etc/kubernetes/pki/etcd/ca.crt \
+--cert=/etc/kubernetes/pki/etcd/server.crt \
+--key=/etc/kubernetes/pki/etcd/server.key \
+--data-dir /var/lib/etcd-from-backup
+```
 
+Check snapshot status : 
+```
+etcdctl snapshot status /opt/snapshot-pre-boot.db \
+  --write-out=table
+```
+
+Back up : 
+
+```
+etcdutl backup \
+  --data-dir /var/lib/etcd \
+  --backup-dir /opt/
+```
+
+```
+etcdutl snapshot restore /opt/snapshot-pre-boot.db \
+--data-dir=/var/lib/etcd \
+--endpoints=https://127.0.0.1:2379 \
+--cacert=/etc/kubernetes/pki/etcd/ca.crt \
+--cert=/etc/kubernetes/pki/etcd/server.crt \
+--key=/etc/kubernetes/pki/etcd/server.key
+```
 
 
 
