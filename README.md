@@ -2125,12 +2125,8 @@ NOTE : With all the etcd command
 (https://www.udemy.com/course/certified-kubernetes-administrator-with-practice-tests/learn/lecture/18478622#overview)
 
 
-/etc/kubernetes/pki/etcd/server.crt
-
-/etc/kubernetes/pki/etcd/ca.crt
-
-/etc/kubernetes/pki/etcd/server.key
-
+- Back up etcd volume
+  
 ```
 etcdctl \
 --endpoints=https://127.0.0.1:2379 \
@@ -2140,33 +2136,26 @@ etcdctl \
 snapshot save /opt/snapshot-pre-boot.db
 ```
 
-```
-etcdctl snapshot restore /opt/snapshot-pre-boot.db \
---endpoints=https://127.0.0.1:2379 \
---cacert=/etc/kubernetes/pki/etcd/ca.crt \
---cert=/etc/kubernetes/pki/etcd/server.crt \
---key=/etc/kubernetes/pki/etcd/server.key \
---data-dir /var/lib/etcd-from-backup
-```
-
-Check snapshot status : 
+- Check snapshot status :
+  
 ```
 etcdctl snapshot status /opt/snapshot-pre-boot.db \
   --write-out=table
 ```
 
-Back up : 
-
-```
-etcdutl backup \
-  --data-dir /var/lib/etcd \
-  --backup-dir /opt/
-```
-
+- Restore etcd
+  
 ```
 etcdutl --data-dir /var/lib/etcd-restore snapshot restore /opt/snapshot-pre-boot.db
 ```
 
+I create new `--data-dir /var/lib/etcd-restore` so I have to update in `/etc/kubernetes/manifests/etcd.yaml` 
+
+- Need to update the `--data-dir`, `volume-mount-path`, `volumes` location
+
+Then I have to restart `kubeapi`, `controller-manager` and `scheduler` . Bcs those are Static file so I will move those `mv /etc/kubernetes/manifests/*.yaml /tmp/` then I will move it back 
+
+Then reload the service daemon `systemctl daemon-reload`
 
 
 
