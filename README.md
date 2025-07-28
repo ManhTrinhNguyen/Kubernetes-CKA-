@@ -2164,12 +2164,7 @@ etcdutl backup \
 ```
 
 ```
-etcdutl snapshot restore /opt/snapshot-pre-boot.db \
---data-dir=/var/lib/etcd \
---endpoints=https://127.0.0.1:2379 \
---cacert=/etc/kubernetes/pki/etcd/ca.crt \
---cert=/etc/kubernetes/pki/etcd/server.crt \
---key=/etc/kubernetes/pki/etcd/server.key
+etcdutl --data-dir /var/lib/etcd-restore snapshot restore /opt/snapshot-pre-boot.db
 ```
 
 
