@@ -117,6 +117,12 @@
   - [Backup and Restore Method](#Backup-and-Restore-Method)
  
   - [Working with ETCDCTL and ETCDUTL](#Working-with-ETCDCTL-and-ETCDUTL)
+ 
+- [Security](#Security)
+
+  - [Security Primitives](#Security-Primitives)
+ 
+  - [Authentication](#Authentication)
 
 # Kubernetes-CKA-
 
@@ -2156,6 +2162,108 @@ I create new `--data-dir /var/lib/etcd-restore` so I have to update in `/etc/kub
 Then I have to restart `kubeapi`, `controller-manager` and `scheduler` . Bcs those are Static file so I will move those `mv /etc/kubernetes/manifests/*.yaml /tmp/` then I will move it back 
 
 Then reload the service daemon `systemctl daemon-reload`
+
+## Security Primitives
+
+**Secure Hosts**
+All access to the Hosts must be secured 
+
+- Root access disable
+
+- Password based authentication disabled
+
+- and only SSH key based authentication to be made available
+
+**Kube-apiserver**
+
+Center of all operations within Kubernetes . Through that we can perform any operations in the Cluster
+
+**We need to make 2 type of decisions :**
+
+Who can access ?
+
+- Define by the Authentication Mechanisms
+
+- I can authenticate with User ID and password stored in statics file, tokens, certificates, or External Authentication providers (LDAP)
+
+- For machine or Applications I create `Service Account`
+
+And what can they do ?
+
+- Defined by Authorization mechanisms RBAC
+
+- Users associated to groups with specific Permissions
+
+- Others Authorization like : ABAC, Node, Webhook Mode authorization  
+
+
+All communications within the Cluster between the various components such as the ETCD Cluster, the Kube-Controller, the Schedulers, API Server and on Worker Nodes, Kubelet and KubeProxy is secured using TLS encryption 
+
+**Communications between Applications within the Cluster**:
+
+By default all Pods can access all other Pod within the Cluster 
+
+I can restrict access between them using `Network Policies`
+
+## Authentication 
+
+To secure the Cluster by securing the communication between internal components and securing management access to the Cluster through authentication and authorization mechanisms 
+
+Human users such as Admin and Developers 
+
+Applications Users such as services or applications need to do something in the Cluster  
+
+Kubernetes do not manage Users natively . It depend on external source like file with user detail or certificates, or a third party identity service like LDAP to manage these users 
+
+In case of `ServiceAccount` Kubernetes can manage them . 
+
+All user access is managed by the `API-server` . Wheather I am accessing the Cluster through `kubectl` or `api` directly
+
+**For `Kube APIserver` authenticate:**
+
+- I can have a list of username and password in a static password file or static token file
+
+  - I can create a list of user and passowrd in `.csv` file and use that as a source for user information .
+ 
+  - File has 3 columes: password, username, user ID .
+ 
+  - Then I pass the file as an option to `Kube APIserver` : `--basic-auth-file=user-details.csv`
+ 
+  - To authenticate using the basic credentials while accessing the API server, specify user and password in curl command `curl -v -k https://master-node-ip:6443/api/v1/pods -u "user1:password123"`
+ 
+  - I can also have a fourth colume with the group detailes to assign users to specific groups 
+ 
+```
+user-details.csv
+
+password123,user1,u0001,group1
+password456,user2,u0002,group2
+``` 
+
+    - To authenticate with a token : `curl -v -k https://master-node-ip:6443/api/v1/pods --header "Authorization: Bearer KpjCVbI7cFAHYPkByTIzRb7gulcUc4B"`
+
+```
+user-token-details.csv
+
+KpjCVbI7cFAHYPkByTIzRb7gulcUc4B,user10,u0010,group1
+rJjncHmvtXHc6MlWQddhtvNyyhgTdxSC,user11,u0011,group1
+mjpoFTEiFOkL9toikaRNTt59ePtczZSq,user12,u0012,group2
+PG41IXhs7QjqWkmBkvGT9gclOyUqZj,user13,u0013,group2
+```
+
+!!! NOTE If try the authenticate user in the `kubeadm` setup, I must also consider volume mounts to passing the auth file (https://www.udemy.com/course/certified-kubernetes-administrator-with-practice-tests/learn/lecture/14296208#overview)
+
+- Or I can authenticate using certificate
+
+
+- Or I can connect to third party authentication protocol like LDAP 
+
+
+
+
+
+
+
 
 
 
