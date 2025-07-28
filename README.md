@@ -124,6 +124,8 @@
  
   - [Authentication](#Authentication)
 
+  - [TLS](#TLS) 
+
 # Kubernetes-CKA-
 
 ## Kodeloud Note 
@@ -2258,9 +2260,39 @@ PG41IXhs7QjqWkmBkvGT9gclOyUqZj,user13,u0013,group2
 
 - Or I can connect to third party authentication protocol like LDAP 
 
+## TLS 
 
+Certicate use to garuantee trust between two parties during a transaction  
 
+- For example the communication between User and Server, TLS ensure the communication is encrypted
+- 
+**Asymmetric EnCryption**: Instead of using a single key to encrypt and decrypt data, this use a pair of keys 
 
+- Private key and Public Key
+
+- The key only with me so it's private , Public key is anyone can access
+
+- If I encrypt the data with the Public Key I can only open it with a Private Key . (Never share Private Key)
+
+- For example : An use case of SSH server . I generate an Public key and the Private key . I will give an copy of my Public Key to a Server (locate at `cat ~/.ssh/authorized.key`) . Then I use my Private Key to SSH to the Server . If I want to ssh to another Server with the same Private key I must copy another Public key (locate at `cat ~/.ssh/authorized.key`) and put it in the other Server
+
+- If ther User want to access my Server . They can generate they are own Public and Private key and put their Public key on my Server at `cat ~/.ssh/authorized.key` 
+
+The problem with **Symmetric EnCryption** was that the key used to encrypted data have to be sent to the Server over network along with encrypted data . So the risk of the Hacker to get the key to decrypt data 
+
+To securely transfer the Sysmmetric key from Client to Server we use **Asymmetric EnCryption**
+
+- We generate Public and Private key pair on the server
+
+- We will use the Open SS: command `openssl genrsa -out my-bank.key 1024`, `openssl rsa -in my-bank.key -pubout > mybank.pem` to generate Private and Public key
+
+When user first access the web Server using `HTTPS` he get the Publics key from the Server . Let's say hacker also get the Public Key 
+
+- The user's browser then encrypt the `sysmmetry key`  using the Public Key provided by the Server by his Private keya.
+
+- Users then send the his Private key and Public key (from a server) back to the Servers . Hacker also have the copy
+
+- The Server then use the private key to decrypt the message and retrieve the `symmetry key` from it 
 
 
 
