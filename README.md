@@ -2284,15 +2284,95 @@ To securely transfer the Sysmmetric key from Client to Server we use **Asymmetri
 
 - We generate Public and Private key pair on the server
 
-- We will use the Open SS: command `openssl genrsa -out my-bank.key 1024`, `openssl rsa -in my-bank.key -pubout > mybank.pem` to generate Private and Public key
+- We will use the Open SSL: command `openssl genrsa -out my-bank.key 1024`, `openssl rsa -in my-bank.key -pubout > mybank.pem` to generate Private and Public key
 
-When user first access the web Server using `HTTPS` he get the Publics key from the Server . Let's say hacker also get the Public Key 
+- When user first access the web Server using `HTTPS` he get the Publics key from the Server . Let's say hacker also get the `Public Key` 
 
-- The user's browser then encrypt the `sysmmetry key`  using the Public Key provided by the Server by his Private keya.
+- The user's browser then encrypt the `Sysmmetric key`  using the Public Key provided by the Server . The `Sysmetric Key` now secure
 
-- Users then send the his Private key and Public key (from a server) back to the Servers . Hacker also have the copy
+- Users then send `the Encrypted his Private key and Public key (from a server)` back to the Servers . Hacker also have the copy
 
-- The Server then use the private key to decrypt the message and retrieve the `symmetry key` from it 
+- The Server then use the private key to decrypt the message and retrieve the `Symmetric key` from it
+
+- However the hacker does not have the `Server's Symetric Key` to decrypt and retieve the `User's Symetric Key`
+
+- The `User's Sysmetric Key` only now available to User and Server . They can now use `Sysmetric Key` to encrypt data and send to each other
+
+- Now the Server can use the `User's Symetric key` to decrypt data and retrieve information
+ 
+But now Hacker create his own website that look exactly like my Bank website for example . He host his website on his own Server 
+
+- So now he generate his own `Private` and `Public` and configure them on his Web Server
+
+- Finally he somehow manages to tweak my Environment or my Network to route my request going to my bank's website to his Server
+
+- Now me as User has his Server Public key sent over . Then I will send `User's Sysmetric Key` to his Server .
+
+- Now he has `User's Symetric Key` then User sent `Encrypted Data with User's Symetric Key` to his Server, he now can decrypted that with `User's Sysmetric Key`
+
+- User have been communicate securely but with the Hacker Server 
+
+What if I could look at the key I received from the Server and say If it is a `Legitimate Key` from real Bank Server ? 
+
+- Now Certificate come in to play
+
+- Server will send the Certificate that has the Key in it 
+
+How do we look at a Certificate and verify if it is Legit ? 
+
+- The most Important is who signed and issued the Certificate
+
+- My Browser will look at the Certificate and check Who signed that Certificate Bcs All of the Browsers built in with a certificate validation mechanism while in the browser text the Certificate received from the Server and Validates it to make sure it is Legitimate
+
+- If it identifies it to be a fixed certificate, then it will warn me
+
+How do I create my Legit Certificate for my Server that Browser will trust ? 
+
+- This is  where Certificate Authorities or CA come in . They are well known organization that can sign and validate my Certificate for me (Symantec, DigiCert, Comodo, Globalsign)
+
+- They it work is I generate a Certificate sigining a Request (CSR) using the key generated earlier and the domain name of my Website : `openssl -new -key my-bank.key -out my-bank.csr -subj "/C=US/ST=CA/O=MyOrg, Inc./CN=mydomain.com"`
+
+- The CA verify my details and once it checks out, they sign the Certificate and send it back to me
+
+- If hacker tried to get his certificate signed the same way, he would fail during the validation phase and his certificate would be rejected by CA . So the website he hosted won't have the Valid Certificate
+
+How do Browser know CA itself was Legitimate ? 
+
+- The CA themelves have a set of `Public Private key pairs`
+
+- CA use their Private Key to sign the Certificates . The public keys of all the CAs are built in to the browser .
+
+- The Browser uses the Public Key of the CA to validate that the Certificate that actually signed by the CA themselves
+
+- I can see them in my Web Browser setting under Certificates .
+
+- These are Public CA help us ensure the Public websites we visit .
+
+However Public CA don't help me validate sites hosted privately . For example for accessing my payroll or internal email application .
+
+- For that I can host my own Private CAs
+
+- Most of those companies have a Private Offering of their Services, a CA server that I can deploy internally within my company
+
+- I can then have the Public Key if my Internal CAs Server installed on all my employees browsers and establish secure connectivity within your organization
+
+The Server's keeper, the client was able to validate that the Server is who they say they are . But the Server does not know if the Client is who they say they are . It could be a hacker impersionating a user by somehow gaining access to his credentials (not over the network) . So what can the Server do to validate that the Client is who they say they are ? 
+
+- As part of the initial trust building exercise, The Server can request a certificate from the Client . And so the Client must generate a pair of keys and a signed Certificate from a valid CA . The client then sends the Certificate to the Server for it to verify that the Client is who they say they are
+
+- TLS Certificate client certficates are not implement on the Web Server . Even if they are, it's all implemented under the hood, So a normal user don't have to generate and manage certificate manually 
+
+This whole Infrastructure, including the CA, the Servers, the People, and the Process of generating, distributing and maintaining digital Certificate is known as `Public Key Infrastructure or PKI`
+
+
+
+
+
+
+
+
+
+
 
 
 
