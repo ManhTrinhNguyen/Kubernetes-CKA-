@@ -124,7 +124,9 @@
  
   - [Authentication](#Authentication)
 
-  - [TLS](#TLS) 
+  - [TLS](#TLS)
+ 
+  - [TLS in Kubernetes](#TLS-in-Kubernetes)
 
 # Kubernetes-CKA-
 
@@ -2364,11 +2366,45 @@ The Server's keeper, the client was able to validate that the Server is who they
 
 This whole Infrastructure, including the CA, the Servers, the People, and the Process of generating, distributing and maintaining digital Certificate is known as `Public Key Infrastructure or PKI`
 
+## TLS in Kubernetes
 
+The Kubernetes Cluster consist of set of Master and Worker Nodes . All communication between these Node need to be secure and must be encrypted 
 
+All interaction between all Services and their Clients need to be secure 
 
+For example : Administrator interacting with the Kubernetes Cluster through the `kubecctl` or while accessing the Kubernetes API directly must establish secure TLS connection 
 
+2 Primary requirement to have all the Various Services within the Cluster to use `Server Certificate` and Client to use `Client Certificate` to verify they are who they say they are 
 
+With `Kube-apiserver`, the `Kube-API server` exposes an HTTPS service that other components, as well as external users use to manage the Kubernetes Cluster 
+
+- So it is a Server and it requires certificates to secure all communication with its client
+
+- So we generate a certificate and key pair. We call it `apiserver.cert` and `apiserver.key`
+
+- Another Server in the Cluster is the `etcd Server` . Its store all Cluster information . It's require a pair of certifcate and key for itself, `etcdserver.crt` and `etcdserver.key`
+
+- The other Server component in the Cluster is on the Worker Nodes . `Kubelet` also expose on HTTPS API endpoint that `Kube-api Server` talk to also required pair of Certificate and Key . `kubelet.crt` and `kubelet.key`
+
+Clien Components: 
+
+- Clients who access the `Kube-api Server` are us Administrator through `kubectl`.
+
+- Administrator required certificate and key pair to authenticate the the `Kube-API server` . `admin.cert` and `admin.key`
+
+- The `Scheduler` talks to the `Kube-Apiserver` to look for pods that require scheduling and then get the `API server` to schedule the Pods on the right Worker Nodes . The Scheduler is a Client that accesses the `kube-apiserver` . So Scheduler also need its own pair of certificate and keys . `schedudler.cert` and `scheduler.key`
+
+- `Kube-Contoller Manager` is another Client also need pair of cert and key `kube-controller.cert` and `kube-controller.key`
+
+- `Kube-proxy` is another Client  need pair of cert and key `kube-proxy.cert` and `kube-proxy.key`
+
+`Kube Api Server` is the only Server that talk to `ETCD Server`
+
+`Kube API Server` also talk to `Kubelet` Server on each of the individual Nodes 
+
+We need CA authority to sign all of these Certificates (I can have more than one)
+
+- CA has it's own pair of Certificate and key `ca.cert` and `ca.key`
 
 
 
