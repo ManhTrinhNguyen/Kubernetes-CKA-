@@ -2265,7 +2265,7 @@ PG41IXhs7QjqWkmBkvGT9gclOyUqZj,user13,u0013,group2
 Certicate use to garuantee trust between two parties during a transaction  
 
 - For example the communication between User and Server, TLS ensure the communication is encrypted
-- 
+
 **Asymmetric EnCryption**: Instead of using a single key to encrypt and decrypt data, this use a pair of keys 
 
 - Private key and Public Key
