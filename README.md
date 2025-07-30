@@ -127,6 +127,8 @@
   - [TLS](#TLS)
  
   - [TLS in Kubernetes](#TLS-in-Kubernetes)
+ 
+  - [Kubernetes Certificate Creation](#Kubernetes-Certificate-Creation)
 
 # Kubernetes-CKA-
 
@@ -2402,9 +2404,222 @@ Clien Components:
 
 `Kube API Server` also talk to `Kubelet` Server on each of the individual Nodes 
 
-We need CA authority to sign all of these Certificates (I can have more than one)
+**We need CA authority to sign all of these Certificates (I can have more than one)**
 
 - CA has it's own pair of Certificate and key `ca.cert` and `ca.key`
+
+## Kubernetes Certificate Creation
+
+Tools generate Cert : `EasyRSA`, `openssl`, `cfssl`
+
+**Client side Cert**
+
+Start with `CA Certificate` :
+
+- Create CA Private Key: `openssl genrsa -out ca.key 2048`
+
+- Request to generate a Certficate signin Request : `openssl req -new -key ca.key -subj "/CN=KUBERNETES-CA" -out ca.csr` . The certificate signing request is like a Certificate with all of my details but with not signature
+
+  - We specify the name of the Component the certificate is for and the common name or CN field
+ 
+- Sign Certificate : `openssl x509 -req -in ca.csr -signkey ca.key -out ca.crt` .
+
+  - Specify the Certificate Signing Request I generated previous command
+ 
+  - It is self-signed by the CA using its own private Key that it generated in the first step
+ 
+- Going forward for all other Certificates we will use CA key pair to sign them
+
+- The CA now has its Private key and root certificate file
+
+Now I will generating Client Certificate (Admin):
+
+- Create Admin Private Key: `openssl genrsa -out admin.key 2048`
+
+- Generate CSR (Certificate Signing Request): `openssl req -new -key admin.key -subj "/CN=KUBE -ADMIN" -out admin.csr`
+
+- Generate Signed Certificate : `openssl x509 -req -in admin.csr -CA ca.crt -CAkey. ca.key -out admin.crt`
+
+  - This time I will Sign using the CA certificate and CA key
+ 
+To differenciate Admin user from any other users :
+
+- The User account need to be identify as an Admin user and not just another basic user do that by adding the group details for the user in the Certificate
+
+- In this case grouped named System Master exists on Kubernetes with Administrative privileges
+
+- I must mention this information in my certificate signing request
+
+- I can do that by adding group detail with `O` parameter while generating CSR : `openssl req -new -key admin.key -subj "/CN=KUBE-ADMIN/O=system:masters" -out admin.csr`.
+
+- Once it signed we now have our Certificate for the Admin user with Admin Privileges
+
+Follow the same process to generate Certificates for all other components that access the `Kube API` server 
+
+`Kube Scheduler` is a system component part of Control Plane so its name must be prefixed with keyword `system`. The same with Controller Manager
+
+What do we do with these Certs ? 
+
+- For example Admin Cert . I can use this certificate instead of `username and password` in a REST API call :
+
+```
+curl https://kube-apiserver:6443/api/v1/pods \
+--key admin.key --cert admin.crt
+--cacert ca.crt
+```
+
+- The other way to is to move all of these Parameters to a `kubeconfig` file . Within that specify the API server endpoint
+
+For the Client to validate the Certificate sent by the Server and vice versa, they all need a copy of the `Certificate Authority` . The one is already installed within user's browser in case of web . Similarly in Kubernetes for these various components to verify each other they all need a copy of the `CA's root certificate` 
+
+**Server side Cert**
+
+ETCD server : 
+
+- Follow the same procedure as before to generate a Certificate for ETCD . `etcd-server`
+
+- ETCD can be deploy as a Cluster accorss multiple Servers as in High Availability Environment. In that case to secure communication between the different members in the Cluster . We must generate addition `peer certificates`
+
+- Once certificate are generated specify them while starting the `ETCD server`
+
+- It requires `CA root certificate` to verify that the Client connecting to ETCD server are valid 
+
+```
+cat etcd.yaml
+
+- --cert-file=
+- --key-file=
+- --trusted-ca-file=
+- --peer-client-cert=
+- --peer-key-file=
+- --peer-trusted-ca-file=
+``` 
+
+`Kube API server`:
+
+- We generate Certificate for API server like before
+
+- Everyone talk to API server. Every Operation goes through API server
+
+- The Kube API server is the primary access point for the cluster and is known by several aliases such as "kubernetes", "kubernetes.default", and "kubernetes.default.svc.cluster.local", as well as its IP address. This diversity requires that its certificate includes multiple Subject Alternative Names (SANs).
+
+- Generate key : `openssl genrsa -out apiserver.key 2048`
+
+- CSR: `openssl req -new -key apiserver.key -subj "/CN=kube-apiserver" -out apiserver.csr`
+
+  - To specify all the alternate names I will create `OpenSSL config file` then pass this config file to CSR : `openssl req -new -key apiserver.key -subj "/CN=kube-apiserver" -out apiserver.csr -config openssl.cnf`
+ 
+- Finally signd the certificate using the CA certificate and key : `openssl x509 -in apiserver.csr -CA ca.crt -CAkey ca.key -out apiserver.crt`
+ 
+```
+openssl.cnf
+
+[req]
+req_extensions = v3_req
+distinguished_name = req_distinguished_name
+
+
+[v3_req]
+basicConstraints = CA:FALSE
+keyUsage = nonRepudiation, digitalSignature, keyEncipherment
+subjectAltN ame = @alt_names
+
+
+[alt_names]
+DNS.1 = kubernetes
+DNS.2 = kubernetes.default
+DNS.3 = kubernetes.default.svc
+DNS.4 = kubernetes.default.svc.cluster.local
+IP.1 = 10.96.0.1
+IP.2 = 172.17.0.87
+```  
+
+Where to specify these keys : 
+
+- To consider the API client Certificates that are used by the `API server` while communicating as a Client to the `ETCD` and `kubelet servers` . The location of these certificates are passed in to the `kube api server` executable or service configuration file
+
+- `CA file` need to be pass in : `--client-ca-file=/var/lib/kubernetes/ca.pem`
+
+- Then provide the `API server certificates` :
+
+```
+--tls-cert-file=/var/lib/kubernetes/apiserver.crt
+--tls-private-key-file=/var/lib/kubernetes/apiserver.key
+```
+
+- Then specify `Client Certificate` used by `KubeAPI server` to connect to `ETCD` and again with `CA` file
+
+```
+---etcd-cafile=/var/lib/kubernetes/ca.pem
+---etcd-certfile=/var/lib/kubernetes/apiserver-etcd-client.crt
+---etcd-keyfile=/var/lib/kubernetes/apiserver-etcd-client.key
+```
+
+- And finally the `Kube API server` connect to `Kubelet`
+
+```
+--kubelet-certificate-authority=/var/lib/kubernetes/ca.pem \
+--kubelet-client-certificate=/var/lib/kubernetes/apiserver-kubelet-client.crt \
+--kubelet-client-key=/var/lib/kubernetes/apiserver-kubelet-client.key \
+```
+
+`Kubelet` Server 
+
+- `Kubelet` run on each Node, responsible for managing the Node who `API server` talk to . To monitor the Node as well as send information regrading what pods to schedule on this Node
+
+- I need a Key Cert pair for Each node in the Cluster
+
+- What to name these Cert ? They will be name after their Nodes
+
+- Once the Certificates are created, use them in the kubelet config file .
+
+- Alway sepcify the root CA certificate
+
+- We must do this for each node in the Cluster 
+
+```
+kubelet-config.yaml(node01)
+
+kind: KubeletConfiguration
+apiVersion: kubelet.config.k8s.io/v1beta1
+authentication:
+  x509:
+    clientCAFILE: "/var/lib/kubernetes/ca.pem"
+authorization:
+  mode: Webhook
+clusterDomain: "cluster.local"
+clusterDNS:
+  - "10.32.0.10"
+podCIDR: "${POD_CIDR}"
+resolvConf: "/run/systemd/resolve/resolv.conf"
+runtimeRequestTimeout: "15m"
+tlsCertFile: "/var/lib/kubelet/kubelet-node01.crt"
+tlsPrivateKeyFile: "/var/lib/kubelet/kubelet-node01.key"
+```
+
+We also talk about sort of Client certificates that will be used by the `Kublet` to communicate with the `KubeAPI server`. These are used by `Kubelet` to authenticate into the `Kube API server`. They need to be generated as well 
+
+What do we name these cert ? The `API SERVER` need to know which node is authenticating and give it the right  set of Permissions so it requires the Nodes to have the right names in the right formats . Since the Nodes are system components like `kube-scheduler` and the `controller manager` the format start with the keyword `system:node:<node-name>`
+
+For `API SERVER` to give it the right set of permission . The Nodes must be added to a Group named `System Nodes`
+
+Once certificate generated they go into `kubeconfig` files as we disscuessed 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
