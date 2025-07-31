@@ -2714,7 +2714,20 @@ To decode : `echo "cert content" | base64 --decode`
 
 **Who does all of it ?** 
 
-All the Certificate Operation carry out by ####Controller Manager
+All the Certificate Operation carry out by **Controller Manager**
+
+There is **CSR-APPROVING** and **CSR-SIGNING** Controller . They are responsible for carrying out these specific tasks 
+
+If anyone has to sign Certificate. They need the **CA Server** root certicate and private key 
+
+**Controller Manager Configuration** has 2 options where I can specify these:
+
+```
+- --cluster-signing-cert-file=/etc/kubernetes/pki/ca.crt
+- --cluster-signing-key-file=/etc/kubernetes/pki/ca.key
+```
+
+
 
 
 
