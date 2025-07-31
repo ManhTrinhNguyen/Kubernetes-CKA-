@@ -2731,12 +2731,127 @@ If anyone has to sign Certificate. They need the **CA Server** root certicate an
 
 ## Kubeconfig 
 
+**Query the Kubernetes REST API**
+
+```
+curl https://my-kube-playground:6443/api/v1/pods \
+  --key admin.key \
+  --cert admin.crt \
+  --cacert ca.crt
+```
+
+**using the kubectl command-line tool**
+
+```
+kubectl get pods \
+  --server https://my-kube-playground:6443 \
+  --client-key admin.key \
+  --client-certificate admin.crt \
+  --certificate-authority ca.crt
+```
+
+But it will take so much time to do that so I configure **Kubeconfig** file so every I make a request I don't need to specify those options 
 
 
+By default the **kubectl** tools look for the **config** file under `$HOME/.kube/config` 
+
+**Config** file have 3 section : 
+
+**Cluster**:
+
+- Cluster are various Kubernetes Cluster that I need access to
+
+- `--server` option will go in here
+
+- `--certificate-authority` will go in here 
+
+**User**
+
+- Are user account with which I have access to the Cluster
+
+- These User may have different **Privileges** on different Cluster
+
+- `--client-key` option will go here
+
+- `--client-certificate` will go here 
+
+**Context**
+
+- Context marry User and Cluster together
+
+- Context define which User account will be used to access which Cluster
+
+- For example I could create a Context name `Admin@Production` that will use Admin Account to access Production Cluster  
+
+Each of those is an Array format . That way I can specify multiple Cluster, Users, or Context in the same file 
+
+```
+apiVersion: v1
+kind: Config
+clusters:
+- name: production
+  cluster:
+    certificate-authority: ca.crt
+    server: https://172.17.0.51:6443
+contexts:
+- name: admin@production
+  context:
+    cluster: production
+    user: admin
+users:
+- name: admin
+  user:
+    client-certificate: admin.crt
+    client-key: admin.key
+```
+
+**kubectl** know which context to choose by using **current context** field 
+
+To view and modify **kubeconfig** file : `kubectl config view`
+
+If I do not specify which **kubeconfig** file to use it ends up using the default file located in the folder **.kube/config** 
+
+Alternatively I can specify **kubeconfig** file `kube config view --kubeconfig=my-custom`. 
+
+We will move our Custom config to **.kube** so it become a default config file 
+
+To update **Current Context** : `kubectl config use-context admin@production`
+
+Other options of kubectl config : `kubectl config -h`
+
+**Each Cluster may be configured with multiple namespace in it**
+
+To configure Context to switch to paticular namespace  
+
+**Context** section can take addition field called **Namespace**
 
 
+```
+apiVersion: v1
+kind: Config
+clusters:
+- name: production
+  cluster:
+    certificate-authority: ca.crt
+    server: https://172.17.0.51:6443
+contexts:
+- name: admin@production
+  context:
+    cluster: production
+    user: admin
+    namespace: default
+users:
+- name: admin
+  user:
+    client-certificate: admin.crt
+    client-key: admin.key
+```
 
+NOTE: Better to use full path for Certificate 
 
+**Another Way to specify Cert credentials**
+
+- We will get a content of `ca.crt` file . Instead of using **Cert Authority** and the path to the file . I may optional use : `certificate-authority-data: <content of cert as base64>`
 
 
 
