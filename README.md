@@ -2621,6 +2621,29 @@ The idea to create a list of certificate files used . There are **Paths**, **Nam
 
 For **kube-apiserver** : `cat /etc/kubernetes/manifests/kube-apiserver.yaml`
 
+- The command used to start the **apiserver** has information about all the certificates it uses. Identify the certificate file used for each purpose and note it down
+
+Next take each certificate and look inside it to find more details about that certificate : `openssl x509 -in /etc/kubernetes/pki/apiserver.crt -text -noout`. I provide a certificate file as input to decode the certificate and view details
+
+- Start with a name on the Certificate under the **Subject** section: `Subject: CN=kube-apiserver`
+
+- Then look for the **Alternative Name**
+
+- Then check the **Validity** section of the certificate to identify the **Expire Date**
+
+- And then the **Issuer** of the Certificate . This should be the **CA** who issued the certificate .. **Kubeadm** name **Kubernetes CA** as **kubernetes** 
+
+**Inspect Service Logs**: 
+
+- When running into issue I want to start looking at logs
+
+- If I set up CLuster from scratch and the Service are configured as **native services** in the OS, I want to start looking at the service logs using the OS logging functionallity : `journalctl -u etcd.service -l`
+
+- In case setup Cluster with **kubeadm** then the various components are deployled as Pods : `kubectl logs etcd-master`
+
+- Sometimes if the core components, such as **Apiserver** or **etcd** servers are down . The **kubectl** won't function
+
+- In this case I have to go one level down to Docker to fetch the logs : `docker logs <container-id>`
 
 
 
