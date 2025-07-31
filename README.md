@@ -131,6 +131,8 @@
   - [Kubernetes Certificate Creation](#Kubernetes-Certificate-Creation)
  
   - [View Certificate Details](#View-Certificate-Details)
+ 
+  - [Certificates API](#Certificates-API)
 
 # Kubernetes-CKA-
 
@@ -2644,6 +2646,107 @@ Next take each certificate and look inside it to find more details about that ce
 - Sometimes if the core components, such as **Apiserver** or **etcd** servers are down . The **kubectl** won't function
 
 - In this case I have to go one level down to Docker to fetch the logs : `docker logs <container-id>`
+
+## Certificates API 
+
+What if new Administator come in to my team and she need a pair of Certificate to access to my Cluster 
+
+- She create her own private key and generate **Certficate Signing Request** and send it to me . Since I am the only Admin I then take the **Certificate Signing Request** to my **CA server**, get it sign by the **CA Server** using the **CA Server Private Key** and **Root Certificate** thereby generating a Certificate and then sends the Certificate back to her
+
+- She now has her own valid pair of Certificate and key that she can use to access the Cluster
+
+The certificates have a **validity period**, it end after a validity period of time . Everytime it expire we follow the same process of generating a new **CSR** and getting it signed by **CA**
+
+**What is CA Server and where is it located in K8 Setup?**
+
+**CA** is just a pair of key and certificate files we have generated . Whoever gain access to these pair of files can sign any Certificate for the Kubernetes environment 
+
+These files need to be protected and store in a Safe Environment 
+
+Let's say we place them on the Server that is fully secure . Now this Server become **CA Server** 
+
+Everytime I want to Sign Certificate I only can do it by logging into that Server  
+
+**We need the automate ways to generate the Certificate** 
+
+With **Certificate API** I now send a Certificate Signing Request directly to Kubernetes through API call 
+
+This time Admin receives a **Certificate signing request** instead of logging onto the Master node and signing the Certificate by himself, he creates a **Kubernetes API object** called **Certficate Signing Request** . 
+
+- Once the **Kubernetes API Object** created all **certificate signing request**  can be seen by Admin of the Cluster .
+
+- The request can be review and approve easily using **kubectl** command
+
+- This Cert can be shared with the User 
+
+User first create a **Key** : `openssl genrsa -out kelly.key 2048`
+
+Then generate **Certificate Signing Request** using her **Key**: `openssl req -new -key kelly.key -subj "/CN=kelly" -out kelly.csr`, Then send the request to Admin 
+
+Admin take the key create **CertificateSigningRequestObject** 
+
+**request** where I specify the Cert signing request sent by user . Specify as **base64** encoded  : `cat kelly.csr | base64`
+
+```
+apiVersion: certificates.k8s.io/v1
+kind: CertificateSigningRequest
+metadata:
+  name: Kelly
+spec:
+  expirationSeconds: 600 # Seconds
+  usages:
+  - digital signature
+  - key encipherment
+  - server auth
+  request:
+    kelly.csr | base64 ## Its content 
+```
+
+Once Ojbect created all **Cert Signing Request** can be seen by Admin by : `kubectl get csr`. 
+
+Identify the new Request and Approve the Request : `kubectl certificate approve kelly`
+
+Kubernetes signs the Certificate using the **CA key pairs** and generate Certificate for the User . This Cert then can be extracted and shared with the User 
+
+To view Certificate : `kubectl get csr kelly -o yaml`
+
+To decode : `echo "cert content" | base64 --decode`
+
+**Who does all of it ?** 
+
+All the Certificate Operation carry out by ####Controller Manager
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
