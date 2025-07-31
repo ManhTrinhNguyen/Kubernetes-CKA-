@@ -133,6 +133,8 @@
   - [View Certificate Details](#View-Certificate-Details)
  
   - [Certificates API](#Certificates-API)
+ 
+  - [Kubeconfig](#Kubeconfig)
 
 # Kubernetes-CKA-
 
@@ -2726,6 +2728,9 @@ If anyone has to sign Certificate. They need the **CA Server** root certicate an
 - --cluster-signing-cert-file=/etc/kubernetes/pki/ca.crt
 - --cluster-signing-key-file=/etc/kubernetes/pki/ca.key
 ```
+
+## Kubeconfig 
+
 
 
 
