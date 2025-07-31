@@ -129,6 +129,8 @@
   - [TLS in Kubernetes](#TLS-in-Kubernetes)
  
   - [Kubernetes Certificate Creation](#Kubernetes-Certificate-Creation)
+ 
+  - [View Certificate Details](#View-Certificate-Details)
 
 # Kubernetes-CKA-
 
@@ -2605,12 +2607,19 @@ For `API SERVER` to give it the right set of permission . The Nodes must be adde
 
 Once certificate generated they go into `kubeconfig` files as we disscuessed 
 
+## View Certificate Details 
 
+To perform a health check of all the Certificates in the entire Cluster 
 
+First I need to know how do Cluster set up 
 
+If I deploy my Cluster from srcatch I have to generate all the certificates by myself  
 
+If I use **kubeadm** it take care of automatically generating and configuring cluster for me 
 
+The idea to create a list of certificate files used . There are **Paths**, **Names** , **Organization**, **Issue**, **Expiration** 
 
+For **kube-apiserver** : `cat /etc/kubernetes/manifests/kube-apiserver.yaml`
 
 
 
