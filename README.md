@@ -2853,7 +2853,12 @@ NOTE: Better to use full path for Certificate
 
 - We will get a content of `ca.crt` file . Instead of using **Cert Authority** and the path to the file . I may optional use : `certificate-authority-data: <content of cert as base64>`
 
+**To set my-kube-config as the default kubeconfig file without overwriting your existing ~/.kube/config and make it persistent across all shell sessions**
 
+```
+echo 'export KUBECONFIG=~/.kube/config:~/path/to/my-kube-config' >> ~/.bashrc
+source ~/.bashrc
+```
 
 
 
