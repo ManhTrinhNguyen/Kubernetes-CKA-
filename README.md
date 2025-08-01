@@ -137,6 +137,10 @@
   - [Kubeconfig](#Kubeconfig)
  
   - [API Group](#API-Group)
+ 
+  - [Authorization](#Authorization)
+ 
+  - [RBAC](#RBAC)
 
 # Kubernetes-CKA-
 
@@ -2932,12 +2936,113 @@ Now I can use `curl http:localhost:8001 -k` and the proxy will use the credentia
 
 **kubectl proxy** is a HTTP proxy service create by **kubectl** the access the **KubeAPI Server**
 
+## Authorization
+
+ When Human or Machine gained access to the Cluster . What can they do ? 
+
+ When we share our Cluster between different organizations or teams, by logically partitioning it using **namespace** we want to restrict access to the user to their **namespace** alone 
+
+ **Authorization Mechanisms**
+
+**Node Auth**:
+
+- **Kube API** server is accessed by Users and **Kubelet** 
+
+- **Kubelet** access **API SERVER** to read information about Services and EndPoints, Nodes and Pods
+
+- **Kubelet** also report to **Kube API Server** with information about the Node such as **status** .
+
+- These requests are handled by Specicial Authorizer known as **Node Authorizer**
+
+- **Kubelet** should be part of the **System Nodes Group** and have a name prefixed with ``system:node:<node-name>`
+
+- Any request coming from a **User** with a name **System Node** and part of the **System Nodes Group** is authorized by the **Node Authorizer** and are granted these privileges  
+
+**Attribute-base auth (ABAC)**
+
+- Dev User is a **External access to the API** .
+
+- **Attribute-base auth (ABAC)** is where I associate a User or Group of users with a set of permissions  Let's say Dev user can View, Create, Delete Pods
+
+- To do this I create a Policy file with set of policy define in JSON format : `{"kind": "Policy", "spec": {"user": "dev-user", "namespace": "*", "resource": "pods", "apiGroup": "*"}}` . Then I will pass this file to **API Sever**
+
+- Everytime I need to add or make change in Security I must edit this policy file manually and restart the **Kube API Server** 
+
+**Role Base Auth (RBAC)**
+
+- Instead of directly associating a User or Group with a Set of Permission we define a **Role**
+
+- For Developers : We create a **Role** with a set of Permission required for Developers then we associate all the Developers through that **Role**
+
+**Webhook**
+
+- To **outsource** all the Auth Mechanisms . Let;s say I want to manage authorization externally and not through the built-in mechanisms that we just discussed
+
+- For example : Open Policy Agent is a third-party tool that help with admission control and authorization . I can have Kubernetes make an API call to Open Policy Agent with the information about the user and his access requirment and have the Open Policy Agen decide if the user Permitted or not . Based on that response the user is granted access 
 
 
+**AlwaysAllow** : Allow all request withou performing any Authorization checks 
 
+**AlwayDeny**: Deny all the Requests 
 
+The **Mode** are set with options : `--authorization-mode=Node,RBAC,Webhook`. If I don't set this option it will set to **AlwaysAllow** by default 
 
+When I have **multiple Mode** configure my request is authorized using each one in the order it is specified 
 
+- For example : When Users send request it will handle by **Node Auth**, bcs **Node Auth** only handle Node Requests it will deny the requests then it forward to the nex one is **RBAC**, this one perform its checks and grants the User permission . Authorization is complete and user is given access to the requested object . As soon as **requests approved** no more checks are done and user is granted permission   
+
+## RBAC 
+
+To create **Role** by creating **Role Object** 
+
+```
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: developer
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["list", "get", "create", "update", "delete"]
+- apiGroups: [""]
+  resources: ["ConfigMap"]
+  verbs: ["create"]
+```
+
+Each **rules** has 3 sections :
+
+- **apiGroups** :
+
+  - For **CORE Group** I can leave the API Group section as blank . For any other Group I specify the Group Name  
+
+- **resources**
+
+- **verbs** 
+
+I can add multiple Rules for single Role 
+
+To create **Role**: `kubectl create -f developer-role.yaml`
+
+To link the **User** to that Role using **RoleBinding**
+
+```
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: devuser-developer-binding
+subjects:
+- kind: User
+  name: dev-user
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: developer
+  apiGroup: rbac.authorization.k8s.io
+```
+
+**subjects** : Where we specify the user details 
+
+**roleRef** is where provide the details of the roll we created 
 
 
 
