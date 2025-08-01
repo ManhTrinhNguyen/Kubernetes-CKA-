@@ -3044,6 +3044,39 @@ roleRef:
 
 **roleRef** is where provide the details of the roll we created 
 
+Note: **Role** And **RoleBind** fall under the scop of Namespaces 
+
+- If I want to limit access User in different namespace then specify the **namespace** within the **metadata**
+
+To view the **Roles**: `kubectl get roles`
+
+To view the **RolesBinding**: `kubectl get rolebindings`
+
+To view more detail about the **Role** : `kubectl describe role developer` 
+
+To view more detail about the **RoleBinding** : `kubectl describe rolebinding developer`
+
+If me as a User would like to see if I have access to particular resource in the Cluster : `kubectl auth can-i create deployment` , `kubectl auth can-i delete deployment`
+
+If I am as a Admin and want to test If that use gained access or not I can use : `kubectl auth can-i create deployment --as dev-user`
+
+To allow access to specific Resources I will use **resourceName**:
+
+```
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: developer
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["list", "get", "create", "update", "delete"]
+- apiGroups: [""]
+  resources: ["ConfigMap"]
+  verbs: ["create"]
+  resourceNameL ["Pod Name"]
+```
+
 
 
 
