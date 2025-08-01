@@ -136,7 +136,7 @@
  
   - [Kubeconfig](#Kubeconfig)
  
-  - [API Group](#API Group)
+  - [API Group](#API-Group)
 
 # Kubernetes-CKA-
 
