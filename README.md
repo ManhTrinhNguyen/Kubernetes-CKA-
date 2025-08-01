@@ -135,6 +135,8 @@
   - [Certificates API](#Certificates-API)
  
   - [Kubeconfig](#Kubeconfig)
+ 
+  - [API Group](#API Group)
 
 # Kubernetes-CKA-
 
@@ -2860,12 +2862,75 @@ echo 'export KUBECONFIG=~/.kube/config:~/path/to/my-kube-config' >> ~/.bashrc
 source ~/.bashrc
 ```
 
+## API Group
 
+**What is Kubernetes API?**
 
+To interact with **API SERVER**: 
 
+- Via **REST** or via **kubectl**
 
+To see the Version : `curl https://kube-master:6443/version`
 
+To see the Pods : `curl https://kube-master:6443/api/v1/pods`
 
+The **Kubernetes API** is grouped into multiple such groups based on their purpose 
+
+- `/apis`
+
+- `/metrics`: To monitor heath of the Cluster 
+
+- `/heathz`: To monitor health of the Cluster
+
+- `/version` : **Version API** for viewing the version of the Cluster 
+
+- `/logs`: To intergating with third-party logging applications 
+
+**Kubernetes API** categorized into 2 : 
+
+**/api** is the **CORE** group
+
+- This is where all the **CORE** functionality exists : `/api/v1/pods,namespace,events,rc,PVC,secret..etc`
+
+**/apis** is the **Name** group 
+
+- The **Name Group API** are more organize . Going forward all the available features are going to made available through these named Groups
+
+- It has group under : `/apps`, `/extensions`, `networking.k8s.io`, `/storage.k8s.io/`,  `/authentication.k8s.io`, `/certificates.k8s.io` (These are **GROUP**)  
+
+- Within `/apps` I have : `/apps/v1` I have `Deployment`, `ReplicaSet`, `StatefulSets` (These are **Resources in that Group**)
+
+- Within `networking.k8s.io` : `/v1` -> `/networkpolicies`
+
+- Each **Resource** has a set of **Action GET, LIST, CREATE, DELETE, UPDATE, WATCH** asscociate with them
+
+The **Kubernetes API reference** page can tell me what the **API Group** is for each object
+
+I can also view these on my Kubernetes Cluster :
+
+- Access **Kube API Server** at port 6443 with any path : It will list the available API groups
+
+```
+curl http://localhost:6443 -k \
+--key admin.key \
+--cert admin.crt \
+--cacert ca.crt
+```
+
+- Within the **Named API** group it return all the supported resource groups : 
+
+```
+curl http://localhost:6443/apis -k | grep name \
+--key admin.key \
+--cert admin.crt \
+--cacert ca.crt
+```
+
+Alternative option is : `kubectl proxy` launches a proxy service locally on port 8001 and uses credentials and certificates from my **kubeconfig** file to access the cluster 
+
+Now I can use `curl http:localhost:8001 -k` and the proxy will use the credentials from **kubeconfig** file to forward request to **KubeAPI Server**
+
+**kubectl proxy** is a HTTP proxy service create by **kubectl** the access the **KubeAPI Server**
 
 
 
