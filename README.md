@@ -141,6 +141,8 @@
   - [Authorization](#Authorization)
  
   - [RBAC](#RBAC)
+ 
+  - [Cluster Role](#Cluster-Role)
 
 # Kubernetes-CKA-
 
@@ -3077,8 +3079,45 @@ rules:
   resourceNameL ["Pod Name"]
 ```
 
+## Cluster Role 
 
+Nodes are Cluster Wide resources . 
 
+Cluster Scope Resources : Nodes, PV, ClusterRoles, ClusterRoleBinding, Certificatesigningrequests, Namespace ... (Where I don't sepcify a namespace)
+
+To see resources with a **Namespaced**: `kubectl api-resources --namespaced=true` 
+
+To see resources with **Non Namepsaced**: `kubectl api-resources --namespaced=fales`
+
+To Authorize users to **CLuster wide** resources I will use **Cluster Role** and **Cluster RoleBinding** 
+
+```
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cluster-administrator
+rules:
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: ["list", "get", "create", "delete"]
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: cluster-admin-role-binding
+subjects:
+- kind: User
+  name: cluster-admin
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: cluster-administrator
+  apiGroup: rbac.authorization.k8s.io
+```
+
+NOTE: I can create **ClusterRole**  for namespaced resources as well . When I do that the user will have access to these resources across all **namespaces**
 
 
 
