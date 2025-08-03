@@ -145,6 +145,8 @@
   - [Cluster Role](#Cluster-Role)
  
   - [Service Account](#Service-Account)
+ 
+  - [Image Security](#Image-Security)
 
 # Kubernetes-CKA-
 
@@ -3198,11 +3200,42 @@ With **v1.24** a change was made where when I create a **SA** . It no longer aut
 
 - This time the Token will have an **expiry date** defined 
 
+## Image Security
 
+This Image `image: nginx` it acutally `image: library/nginx` .
 
+- First part stand for User or Account Name . If I don't provide User or AccountName It assume to be `library`
 
+- **Library** is a name of Default Account where Docker's offical images are stored 
 
+**Where are these Images store and pull from?** 
 
+Since we have not specified the location, it assume to be Docker Registry **docker.io** (DockerHub)
+
+To use Image from our **Private Registry** the Image name should be a full path in the Private Registry: `private-registry.io/apps/internal-app`
+
+For Kubernetes get the **Credentials** and authenticate to **Private Registry** : 
+
+- First we create **Secret Object** with Credentials in it . **Secret Type: docker-registry**
+
+```
+kubectl create secret docker-registry <docker-name> \
+--docker-server= \ 
+--docker-username= \ 
+--docker-password= \ 
+--docker-email= 
+```
+
+- **docker-registry** is a built-in Secret Type that was built for storing Docker Credentials
+
+- Then we specify the Secret inside our Pod definition file :
+
+```
+imagePullSecrets:
+- name: <docker-name>
+```
+
+When the Pod created **Kubelet** use the credentials from Secret to pull Images 
 
 
 
