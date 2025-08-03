@@ -147,6 +147,8 @@
   - [Service Account](#Service-Account)
  
   - [Image Security](#Image-Security)
+ 
+  - [Docker Security](#Docker-Security)
 
 # Kubernetes-CKA-
 
@@ -3236,6 +3238,73 @@ imagePullSecrets:
 ```
 
 When the Pod created **Kubelet** use the credentials from Secret to pull Images 
+
+## Docker Security 
+
+Containers and Host share the same **Kernal** 
+
+Containers are isolated using namespaces in **Linux** 
+
+- Host has its own Namespace and Containers have its own Namespace
+
+- All the Processes run by Containers are infact run by the Hosts itself but in their own namespace
+
+When I list the **Processes within the Docker container** `ps aux` I will see the **Container Process** with the Process ID : 1 
+
+So when I list the **Processes on the Host**, I see a list of Processes including **Container Process** but with different Process ID
+
+This is bcs Processes can have different **Process IDs** in different **Namespaces** 
+
+**Users in context of Security** 
+
+**Docker Host** has a set of users, **Root** as well as **Non-Root** 
+
+By default, Docker run processes within Containers as the **Root User** 
+
+If I don't want the **Processes within the Container** to run as **Root User** I may set the user using the **User Option within the Docker run command** and specify the **New UserID** : `docker run --user=1000 ubuntu sleep 3600`
+
+Another the way to enfore **User Security** is to have this defined in then **Docker Image** itself at the time of Creation
+
+- For example I can define the and set the `UserID: 1000` . Then build the custom image 
+
+```
+FROM Ubuntu
+
+USER 1000 
+```
+
+- We can not run the Image without specify the `userID` and the **Process** will be run with the **UserID: 1000**
+
+**What happen if I run Container with a Root User?**
+
+Docker implements a set of Security features that limits the abilities of the **Root User** within the Container .
+
+The **Root User within the Container** isn't really like the **Root User On the Host** 
+
+To see a full list of **Linux Capability** : `/usr/include/linux/capability.h`
+
+I can now control and limit what capabilities are made available to a user . By default, Docker run a container with limited set of Capabilites, and so the **Processes run within the Container** do not have the privileges to say reboot the host or perform operations that can disrupt the host or other containers running on the same host 
+
+To provide additions privileges use the : `docker run --cap-add` . Also to drop the privileges: `docker run --cap-drop`
+
+If I want to run container with all **Privileges** : `docker run --privileged`
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
