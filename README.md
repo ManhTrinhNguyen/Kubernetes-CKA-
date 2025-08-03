@@ -3119,7 +3119,7 @@ roleRef:
 
 NOTE: I can create **ClusterRole**  for namespaced resources as well . When I do that the user will have access to these resources across all **namespaces**
 
-
+Use `kubectl api-resources` to check **API GROUP** and **Resources Name**
 
 
 
