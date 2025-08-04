@@ -3293,7 +3293,11 @@ If I want to run container with all **Privileges** : `docker run --privileged`
 
 ## Security Contexts
 
+In K8s, Container are encapsulated in Pods . I may choose to configure the **Security Setting** at a container Level or at Pod Level 
 
+If I configure at **Pod Level** the setting will carry over to all the Containers within the Pod 
+
+If I configure at both **Pods and Containers** the settings on the container will override the settings on the Pods 
 
 
 
