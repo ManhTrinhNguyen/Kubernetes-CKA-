@@ -3299,7 +3299,32 @@ If I configure at **Pod Level** the setting will carry over to all the Container
 
 If I configure at both **Pods and Containers** the settings on the container will override the settings on the Pods 
 
+```
+apiVersion: v1
+kind: Pod
+metadata:
+  name: web-pod
+spec:
+  containers:
+    - name: ubuntu
+      image: ubuntu
+      command: ["sleep", "3600"]
+      securityContext:
+        runAsUser: 1000
+        capabilities:
+          add: ["MAC_ADMIN"]
+```
 
+**securityContext** to configure **Security Context on the Containers**
+
+- **runAsUser** To set **UserID** for the Pod 
+
+- To add **capabilites** and specify a list of capabilities
+
+```
+capabilities:
+  add: ["MAC_ADMIN"]
+```
 
 
 
