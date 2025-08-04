@@ -151,6 +151,8 @@
   - [Docker Security](#Docker-Security)
  
   - [Security Contexts](#Security-Contexts)
+ 
+  - [Network Policies](#Network-Policies)
 
 # Kubernetes-CKA-
 
@@ -3326,23 +3328,200 @@ capabilities:
   add: ["MAC_ADMIN"]
 ```
 
+## Network Policies
+
+**Traffic** 
+
+There is 2 types of Traffics **Ingress and Egress** 
+
+**Ingress** is the incoming traffic from the Users 
+
+**Egress** is the outgoing request to the **App Server** 
+
+In case of **Backend API** server, it receives **Ingress traffic** from **Frontend** and **Engress traffic** to **DB server** 
+
+In the **DB Server** perspective it recieve **Ingress Traffic** from **Api Server** 
+
+**Network Security in Kubernetes** 
+
+So we have Cluster with a **Set of Nodes** hosting a **Set of Pods and Services**
+
+Each Node, Pod and Service have an **IP Address** 
+
+One of prerequisite for Networking in Kubernetes, is whatever solution I implement the Pod should be able to communicate with each other without having to configure any additional settings like **Routes** 
+
+- For example: All pods are on a Virtual Private Network that span accross the Node in Kubernetes Cluster . By default **its can reach each other using the IP address or Pod name or Services**
+
+- Kubernetes is configured by default with **All Allow Rules** that allow traffic from any Pod to any other Pod or Service within the Cluster 
+
+**Network Policy** to implement to allow traffic to DB server only from API server 
+
+**Network Policy** is another Object in Kubernetes namespaces like Pods, Replicas Sets, I link a **Network Policy** to one or more Pods . I can define rules within the **Network Policy** .
+
+- In this case I would say only allow **Ingress Traffic** from the API pod on port 3306. Once this policy created it block all other traffic to the pod 
+
+To apply or link a **Network Policy** to Pod we use **Labels and Selector** 
+
+- We **Labels** the Pod and use the same **Labels** on the **Port selector** field in the **Network Policy** and the we build our Rule
+
+- Under **Policy Types** specify whether the rule is to allow **Ingress or Egress** traffic or both
+
+- Next we define **Ingress Rule** that allow traffic from API Pod using **Labels and Selector**
+
+- And finally the Port allow traffic on 3306
+
+```
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: db-policy
+spec:
+  podSelector:
+    matchLabels:
+      role: db
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          name: api-pod
+    ports:
+    - protocol: TCP
+      port: 3306
+```
+
+Note: Ingress or Engress isolation only comes into effect if I have **ingress** or **egress** in the **policy types** 
+
+**Network Policy** are enforced by the Network Solution implemented in Kubernetes Cluster 
+
+The supported : **Kube-router**, **Calio**, **Romana**, **Weave-net**
+
+**More Details Network Policy** 
+
+For example I have Front end, API backend, and DB Pod . My goal is to protect the **DB pod** so that it does not allow access from any other Pod except the **API pod** and only on Port 3306 
+
+First I want to block everything going in and out of the DB pod . So I will create a **Network Policy**
+
+- First step is to associate with the Pod I want to protect by using **Labels and Selector**
+
+- Then I need to figure out what **Types of Policies** should be defined on this **Network Policy** object to meet our requirement . **Ingress and Egress**
+
+- From **DB Server** Perspective I want to allow incoming traffic from API Pod **(Ingress)** then the **DB Server** return results **Egress** .
+
+- But do I need separate rule for the Results to go back to the **API Pod** ? No, bcs once I allow incoming traffic the response to that traffic is allow back automatically . We don't need a separate rule for that . So in this case I only allow **Ingress rule from API pod to DB Pod** . And that allow **API Pod** connect to DB, run queries and also retrieve the result of the queries 
 
 
+What if there are multiple **API Pods** in the Cluster with the **Same Labels** but in different **Namespaces** .
+
+The current **Network Policy** would allow Any Pod in any **Namespace** with **matching Labels** to reach **DB Pod** . But I only want to allow **API pod** from **Production Namepsace** to reach **DB Pod**.
+
+- To do this I add the **namespaceSelector** 
+
+```
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: db-policy
+spec:
+  podSelector: 
+    matchLabels:
+      role: db ## Labels on the DB Pod 
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          name: api-pod
+      namespaceSelector:
+        matchLabels:
+          name: prod 
+    ports:
+    - protocol: TCP
+      port: 3306
+```
+
+What if I only have **namespaceSelector** but not **podSelector**, in this case all Pod within the **Specified Namespace** will be allow to reach **DB Pod** 
+
+Another Use Case :
+
+- Let's say I have a **Backup Server** outside of K8 Cluster, and we want to allow this Server to connect to **DB Pod** . **Backup server** is not a Pod, the **Namespace and Selector** filed won't work . However I knows the **IP Address** I could configure **Network Policy** to allow traffic originating from certain **Ip addresses**
+
+- For this I add new Type **ipBlock** .
+
+- **IP Blocks**  allow me to specify a **range of IP addresses** from which I could allow traffic to hit **DB pod**  
+
+```
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: db-policy
+spec:
+  podSelector: 
+    matchLabels:
+      role: db ## Labels on the DB Pod 
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          name: api-pod
+      namespaceSelector:
+        matchLabels:
+          name: prod
+    - ipBlock:
+        cidr: 192.168.5.10/32
+    ports:
+    - protocol: TCP
+      port: 3306
+```
+
+These **Types** can be passed in separately as individual rules or together as part of Single rules 
 
 
+Another user Case:
 
+- Let's say we have an **Agent** on the **DB Pod** that pushes backup to the **Backup Server** . In this case traffic is originating from **DB Pod** to **Backup Server**
 
+- First we add **Egress** to **policyTypes**
 
+- Instead of **from** we now have **to**
 
+- Under **to** I could use any **Types** of **Selector**  
 
-
-
-
-
-
-
-
-
+```
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: db-policy
+spec:
+  podSelector: 
+    matchLabels:
+      role: db ## Labels on the DB Pod 
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          name: api-pod
+      namespaceSelector:
+        matchLabels:
+          name: prod 
+    ports:
+    - protocol: TCP
+      port: 3306
+  egress:
+  - to:
+    - ipBlock:
+        cidr: 192.168.5.10/32
+    ports:
+    - protocol: TCP
+      port: 80
+```
 
 
 
