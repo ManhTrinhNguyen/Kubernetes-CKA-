@@ -157,6 +157,8 @@
   - [Kubectx and Kubens](#Kubectx-and-Kubens)
  
   - [Custom Resource Definitions CDR](#Custom-Resource-Definitions-CDR)
+ 
+  - [Operator](#Operator)
 
 # Kubernetes-CKA-
 
@@ -3605,14 +3607,35 @@ spec:
 
 **CDR** only allow me to create these Resources and store them in **ETCD** . It's not actually going to do anything about these resources bcs we don't have a **Controller** 
 
+## Custom Controller 
 
+What I need to do is **monitor the status of the Objects in ETCD and perform actions**
 
+**Controller** is any process or code that runs in loop and is continuously monitoring the Kubernetes Cluster and listening to events of specific objects being changed 
 
+Developing in Go with Kubernetes Go Client provide support for other libraries like shared informers that provided caching and queuing mechanisms that can help build controller easily 
 
+There is Github repo: (https://github.com/kubernetes/sample-controller) . 
 
+First clone this repo then modify the `controller.go` with my custom code and build and run it 
 
+## Operator 
 
+**CRD** and **Custom Controller** can be packaged together to be deployed as a single entity using the **Operator Framework** 
 
+By deploy the flight operator it internally creates the **CRD** and the **Resources**, also deploys the **Custom Controller as a Deployment** .
+
+**Operator Framework** does much more than just deploying these 2 components 
+
+For example: **ETCD Operator** it is used to deploy and mange an **ETCD Cluster within Kubernetes** 
+
+- It has a **ETCD CRD** and **ETCD Controller**
+
+- It can take a **backup** of the ETCD Cluster, as well as resotre a **backup** to the ETCD Cluster by simply creating a **CRD** 
+
+So **Kubernetes Operator** do what a **Human Operator** typically would do to manage a specific application such as Install, maintaining, taking backups and restoring backup in case of disasters 
+
+All Operator are available at (operatorhub.io)
 
 
 
