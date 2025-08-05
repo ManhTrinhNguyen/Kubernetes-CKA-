@@ -153,6 +153,10 @@
   - [Security Contexts](#Security-Contexts)
  
   - [Network Policies](#Network-Policies)
+ 
+  - [Kubectx and Kubens](#Kubectx-and-Kubens)
+ 
+  - [Custom Resource Definitions CDR](#Custom-Resource-Definitions-CDR)
 
 # Kubernetes-CKA-
 
@@ -3522,6 +3526,108 @@ spec:
     - protocol: TCP
       port: 80
 ```
+
+## Kubectx and Kubens
+
+(https://www.udemy.com/course/certified-kubernetes-administrator-with-practice-tests/learn/lecture/27430646#content)
+
+## Custom Resource Definitions CDR
+
+**Controller** is a process that runs in the background and its job is to **continuously monitor the status of resources** that it is supposed to manage 
+
+I can't create any **Resource** that I want without configuring it in the **Kubernetes API** 
+
+For that we need **CDR** . I will use **CRD** to tell Kubernetes that I want create **Object of Kind** 
+
+**scope** defines if the Object is **namespaced** or not 
+
+- **namespaced scope** : Pod, ReplicaSet, Deploymnet, Services, ....
+
+- **non-scope namepsace**: PVC, Nodes, namespace itself ....
+
+**group**: is the **API Group** that we provide in the API Version 
+
+**names**: Name of resources
+
+- `kind:`
+
+- `singular`: to display the resource type in the output of **kubectl** command 
+
+- `plural:` is used by the Kubernetes API resource. If I run `kubectl api resources` it will show here
+
+- `shortNames`: to provide short version of the Name
+
+**versions**: Each resource can be configured with multiple version as it passes through the various phases of its lifecycle 
+
+- **served**: With multiple Versions configured for the same resource. We must choose which ones are served through the **API Server** .
+
+- **storage**: And we also define which is the Storage Version if I have multiple Version only one version can be marked as the storage version
+
+- **Schema**: The Schema define all the parameters that can specified under the **spec** section when I create the Object .
+
+  - Schema define what fields are supported and what type of value that fields support ...
+ 
+  - Schema use **OpenAPI v3** which specify the different properties using an **Object type**
+  
+```
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: flighttickets.flights.com
+spec:
+  scope: Namespaced
+  group: flights.com
+  names:
+    kind: FlightTicket
+    singular: flightticket
+    plural: flighttickets
+    shortNames:
+      - ft
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                from:
+                  type: string
+                to:
+                  type: string
+                number:
+                  type: integer
+                  minimum: 1
+```
+
+**CDR** only allow me to create these Resources and store them in **ETCD** . It's not actually going to do anything about these resources bcs we don't have a **Controller** 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
