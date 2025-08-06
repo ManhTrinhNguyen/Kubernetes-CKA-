@@ -3827,7 +3827,7 @@ What happended to the **PV** when the **PVC** is deleted ?
 
 - To recyle . In this case the data in the data volume will be srubbed before making it available to other Claim : **PersistentVolumeReclaimPolicy: Recycle**
 
-
+To use **PVC** in Pod (https://www.udemy.com/course/certified-kubernetes-administrator-with-practice-tests/learn/lecture/17328568#content)
 
 
 
