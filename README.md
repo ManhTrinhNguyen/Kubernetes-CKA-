@@ -162,15 +162,17 @@
 
  - [Storage](#Storage)
     
-  - [Docker Storage](#Docker-Storage)
-
-  - [Container Storage Interface](#Container-Storage-Interface)
-
-  - [Volume](#Volume)
-
-  - [Persistence Volume](#Persistence-Volume)
-
-  - [Persitence Volume Claim](#Persitence-Volume-Claim)
+    - [Docker Storage](#Docker-Storage)
+  
+    - [Container Storage Interface](#Container-Storage-Interface)
+  
+    - [Volume](#Volume)
+  
+    - [Persistence Volume](#Persistence-Volume)
+  
+    - [Persitence Volume Claim](#Persitence-Volume-Claim)
+  
+    - [Storage Class](#Storage-Class)
 
 # Kubernetes-CKA-
 
@@ -3829,12 +3831,34 @@ What happended to the **PV** when the **PVC** is deleted ?
 
 To use **PVC** in Pod (https://www.udemy.com/course/certified-kubernetes-administrator-with-practice-tests/learn/lecture/17328568#content)
 
+## Storage Class
 
+**Storage Class** I can define a provisioner such as **Google Storage, AWS EBS, Azure etc..** that can automatically provision storage on AWS EBS for me and attach that to Pods when a claim is made 
 
+```
+apiVersion: storage.k8.io/v1
+kind: StorageClass
+metadata:
+  name: ebs-aws
+provisioner: kubernetes.io/ebs-aws
+```
 
+When I have **Storage Class** I don't need a PV, bcs now I have StorageClass will automatically create a Storage when a Pod need
 
+For **PVC** to use **StorageClass** we specify **storageClassName: ebs-aws** 
 
+With each of these **Provisioners** I can pass in additionall **parameters** such as the type of disk to provision or the replication type 
 
+```
+apiVersion: storage.k8.io/v1
+kind: StorageClass
+metadata:
+  name: ebs-aws
+provisioner: kubernetes.io/ebs-aws
+parameters:
+  type:
+  replication-type: none
+```
 
 
 
