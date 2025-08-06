@@ -168,6 +168,10 @@
 
   - [Volume](#Volume)
 
+  - [Persistence Volume](#Persistence-Volume)
+
+  - [Persitence Volume Claim](#Persitence-Volume-Claim)
+
 # Kubernetes-CKA-
 
 ## Kodeloud Note 
@@ -3756,6 +3760,92 @@ spec:
       volumeID: <volume-id>
       fsType: ext4
 ```
+
+## Persistence Volume 
+
+**Persistence Volume** is a Cluster-Wide pool of Storage Volumes configure by Admin to be use by User deploy Application 
+
+The User can now select to **Storage Pool** using the **Persistence Volume Claim** 
+
+- **accessModes** define how the Volume should be mounted on the **Host** : **ReadOnlyMany, ReadWriteOne, ReadWriteMany**
+
+- **capacity**: Specify the amount of Storage to be reserved for this **PersistenVolume**
+
+- **hostPath**: This is one of the **Volume Types**
+
+- **awsElasticBlockStore** : This is one of the **Volume Types**
+
+```
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: my-pv
+spec:
+  accessModes:
+    - ReadWriteOnce
+  capacity:
+    storage: 1Gi
+  awsElasticBlockStore: ## Never use in Production 
+    volumeID:
+    fsType: ext4
+```
+
+## Persitence Volume Claim 
+
+Admin create the **PV** then User create **PVC** to use the storage 
+
+Once **PVC** created Kubernetes bind the **PV** volume to claim based on the request and propeties set on the Volume 
+
+Every **PVC** is bound to a **PV** during the binding process, Kubernetes tries to find a , PV that has **sufficent capacity** that request by the claim. And any other request properties such as **Access Mode, Volume Mode, Storage Class etc...** 
+
+If there are multiple matches for a single Claim and I would like to use particular **PV** I can still use **Labels and Selectors** to bind to the right Volumes 
+
+Note: Smaller claim may get bound to larger Volume if all the criteria matches and there are no better options . 
+
+There is one to one relationship between claim and volume .
+
+If there is no Volume available the **PVC** remain in the **pending** state . Until newer volume are made available to the Cluster . Once newer volume are available the Claim automatically bound to a newly available volume 
+
+```
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+ name: myclaim
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 500mi
+```
+
+What happended to the **PV** when the **PVC** is deleted ? 
+
+- I can choose what happen to the **PV** : **PersistentVolumeReclaimPolicy: Retain**  (Default). Meaning the **PV** will remain until Admin manually deleted
+
+- To delete it automatically : **PersistentVolumeReclaimPolicy: Delete**
+
+- To recyle . In this case the data in the data volume will be srubbed before making it available to other Claim : **PersistentVolumeReclaimPolicy: Recycle**
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
