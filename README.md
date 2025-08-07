@@ -177,6 +177,8 @@
 - [Networking](#Networking)
 
   - [Linux Networking Basics](#Linux-Networking-Basics)
+ 
+  - [DNS](#DNS)
 
 # Kubernetes-CKA-
 
@@ -3930,11 +3932,62 @@ Whether a Host can forward packets between interface is governed by a settings i
 
 - I have to modify value in thr `/etc/sysctl.conf -> net.ipv4.ip_forward = 1` 
 
+## DNS 
+
+We have 2 computer **A and B** in the same network with IP address `192.168.1.10` and `192.168.1.11` . 
+
+I want to use a **Name** instead of Ipaddress to **ping** or connect to each other . 
+
+- I need to set a **Name** for both system . And tell the Both system that the other System has assigned that **Name**
+
+- To tell System A when I say **db as a Named on System B** I mean **System B Ip address** : `cat >> /etc/hosts`
+
+```
+192.168.1.11     db
+```
+
+NOTE: Whatever we put in the `cat >> /etc/hosts` file it a source of truth for Host A but that may not the Truth . Host A does not check to make sure if System B acutaly name is db 
+
+Translating hostname to **IP address** this way is known as **Name resolution** . Within a small system I can easily set in the **/etc/hosts file** 
+
+Untill the environment grew and these files got filled with too many Entries and managing these became too hard . If one of the Servers IP changed I would need to modify the entries in all of these Hosts, and that's where we decided to move all these Entries  into a single Server who will manage it centrally **DNS Server** 
+
+And then we point all hosts to look up that Server if they need to resolve the **Host name** to an **IP address** instead of its own `/etc/hosts` files .
+
+**How do we points our host to a DNS Server?** . 
+
+Every Hosts has a **DNS Resolution configuration file** at **/etc/resolv.conf** . I add an entry into it specifying the address of the DNS Server .
+
+```
+/etc/resolv.conf
+
+nameserver 192.168.1.100
+```
+
+Once this is configured on all of my hosts, every time a host comes up across a host name that it does not know about it looks it up from the **DNS Server**  
+
+If I want to provision a **test server** for my own needs . 
+
+If I try to **ping** a server that is not in my **DNS Server** or **/etc/hosts** 
+
+For example : I try to ping **facebook.com**  but I dont have **facebook.com** in my **/etc/hosts** and Also I don't have its in my **DNS Server** this case It will failed 
+
+- I will add another entries into my **/etc/resolv.conf** to point to a **Name Server** that knows **facebook.com**.
+
+```
+nameserver 8.8.8.8
+```
+
+**8.8.8.8** is a common well-known public Name Server available on the Internet hosted by Google that knows about all websites on the  Internet 
+
+I can have multiple **Name Server** like this configure on my host . But then I will have to configure on my hosts in the Network 
+
+I already have a **Name Server** within my network configured on all the hosts . So in that case, I can configure the **DNS server**  itself to forward any unknown host names to the Public name server on the Internet 
 
 
+**Domain Name** 
 
-
-
+When I try to reach **apps.google.com** the IP address of the Server serving **apps.google.com** maybe resolved with the help of multiple **DNS Servers** . The root **DNS server** looks at my request and points me to a **DNS Server** serving **.com** . A **.com DNS Server** look at my request and forward me to Google and **Google DNS Server** provides me the IP of the Server serving the **apps.google.com**  . In order to speed up all future results, my organziation DNS server may choose to cache this IP for a period of time, typically few seconds up to few minutes .That way it doesn't have to go through the whole process 
 
 
 
