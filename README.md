@@ -179,6 +179,10 @@
   - [Linux Networking Basics](#Linux-Networking-Basics)
  
   - [DNS](#DNS)
+ 
+  - [coreDNS](#coreDNS)
+ 
+  - [Network namespaces](#Network-namespaces)
 
 # Kubernetes-CKA-
 
@@ -4047,10 +4051,58 @@ Store **IPv6** to host names is known as **AAAA records**
 
 Mapping one name to another name is called **CNAME records**
 
+## coreDNS 
+
+(https://www.udemy.com/course/certified-kubernetes-administrator-with-practice-tests/learn/lecture/14410330#content)
+
+## Network namespaces
+
+**Network namespaces** are used by containers like Docker to implement network isolation 
+
+Container are separate from the underlying host using **namespace** 
+
+When I create a container, I want to make sure that it is isolated, that it doesn't see any other processes on the Host or any other container . So we create a special room for it on our host using **namespace** 
+
+The Underlying Host, has visibility into all of the **processess** including those running inside the containers . This can be seen when I list the **processes** from **within the container**
+
+When I list the same **processes** as a Root User from the Underlying Host, I see all the other processes along with the process running inside the container but with **different process ID** 
+
+When it come to networking out hosts has **its own intefaces (eth0)** that connect to the local area network . Our host has its own routing and **ARP tables** with information about rest of the network . I want to see all of those detail from the container 
 
 
 
-  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
