@@ -173,6 +173,10 @@
     - [Persitence Volume Claim](#Persitence-Volume-Claim)
   
     - [Storage Class](#Storage-Class)
+  
+- [Networking](#Networking)
+
+  - [Linux Networking Basics](#Linux-Networking-Basics)
 
 # Kubernetes-CKA-
 
@@ -3859,6 +3863,72 @@ parameters:
   type:
   replication-type: none
 ```
+
+## Linux Networking Basics
+
+For Computer A to reach Computer B we connect them to a **Switch** . **Switch** create a network containing the two systems 
+
+To connect them to the **Host** we need a **ehth0: Interface (first Ethernet (wired) network device)** on each **Host** 
+
+To see the **Interface** for the Host : `ip link`
+
+Let's assume it is a network with the address `192.168.1.0`. We then assign the system with IP address on the same network : `ip addr add 192.168.1.10/24 dev eth0` and `ip addr add 192.168.1.11/24 dev eth0`
+
+Once the links are up and **IP addresses** are assigned . The computer can now communicate with each other through the **Switch** : `ping 192.168.1.11`
+
+The **Switch** can only enable communication within a network, whichm eans it can receive packets from a host on the network and deliver it to other systems within the same Network 
+
+For the System to reach the System in **another Network** we will use the **Router** .
+
+**Router** help connect 2 network together . Since it connect to 2 Network it get **2 IPs assigned** 1 on each Network 
+
+**When System B in one Network try to reach System C in another Network . How does it know where the Router is on the Network ?**
+
+- We need to configure the system with a **Gateway**
+
+- If the Network is a room, the **Gateway** to the outside world
+
+- The System need to know where that door is to go through that
+
+- To see the existing routing configuration on a system : `route` it will display the kernal **routing table**
+
+- To configure a Gateway on **System B** to reach the **systems C on network 2.0** : `ip route add 192.168.2.0/24 via 192.168.1.1`
+
+  - `192.168.2.0/24` : Is a IP block from **System C**
+ 
+  - `192.168.1.1`: Is a **Router** on **System B**
+ 
+- This has to be configured on all the System
+
+Suppose these System need access to the Internet . I can say for any Network that I don't know a Route to use this Router as the **Default Gateway**  
+
+If I have multiple **Routers** in my Network . 1 for **Internet** the other is for **Internal Private Network** then I have need to have 2 Separates Entries for each Network 
+
+If I am having issues reaching internet from my Systems, this **Routing Table** and the **Default Gateway** configuration is a good place to start 
+
+**How we can set up Linux Host as a Router** 
+
+I have 3 Hosts A, B and C . 
+
+A and B connected to network `192.168.1.0`. and B and C to another on `192.168.2.0`
+
+So host B is connected to both the Networks using 2 Interfaces **eth0** 
+
+A ip address `192.168.1.5` , C ip address `192.168.2.5` . 
+
+How do I get A to talk to C  . We need to tell host A that the **Gateway** to network is through Host B : `ip route add 192.168.2.0/24 via 192.168.1.6`
+
+By default in Linux, package are not forwarded from one interface to the next . 
+
+- For example: Package received on **Eth0** on host B are not forwarded to elsewhere through **Eth1** (For security reason)
+
+Whether a Host can forward packets between interface is governed by a settings in this system at file `cat /proc/sys/net/ipv4/ip_forward`
+
+- By default the value in this file is set to **0** meaning no Forward
+
+- `echo 1 > ip addr add 192.168.1.10/24 dev eth0` set to one so I can see **ping** go through
+
+- I have to modify value in thr `/etc/sysctl.conf -> net.ipv4.ip_forward = 1` 
 
 
 
