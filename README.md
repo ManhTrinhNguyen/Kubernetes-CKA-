@@ -3987,13 +3987,70 @@ I already have a **Name Server** within my network configured on all the hosts .
 
 **Domain Name** 
 
-When I try to reach **apps.google.com** the IP address of the Server serving **apps.google.com** maybe resolved with the help of multiple **DNS Servers** . The root **DNS server** looks at my request and points me to a **DNS Server** serving **.com** . A **.com DNS Server** look at my request and forward me to Google and **Google DNS Server** provides me the IP of the Server serving the **apps.google.com**  . In order to speed up all future results, my organziation DNS server may choose to cache this IP for a period of time, typically few seconds up to few minutes .That way it doesn't have to go through the whole process 
+How IPs translate to names that we can remember on the **Public Internet**
+
+The reason they are in this format separated by dots like **.com , .edu, .org** is to group like things together 
+
+**.com, .net, .edu, .org, .io etc...** are **Top level Domain** . They represent the intent of the website 
+
+In Google case the **.** is the **root** . Where everything start 
+
+- **.com** is a Top Level Domain .
+
+- Google is a domain name assigned to Google
+
+- **www** is a **Subdomain**
+
+  - **Subdomain** help in further grouping things together under **Google**. For example **maps.google.com** is google map service so **map** is a subdomain
+  
+
+When I try to reach **apps.google.com** . My request first hit my **Organization Internal DNS server**, it doesn't know who apps or google is. So it forward a request to the Internet 
+
+- On the Internet, the IP address of the Server serving **apps.google.com**  maybe resolved with the help of multiple **DNS server**
+
+- The **Root DNS Server** looks at my request  and point me to a **DNS server serving .com**
+
+- **.com DNS Server** looks at my request and forward me to Google
+
+- Then **Google DNS Server** provide me the IP address of the Server serving the **apps.google.com**
+
+- In order to speed up all fututre results, my **organizations's DNS Server** may choose to cache this IP for a Period of time 
+
+- This is out for the **Public**
+
+**What about my Orgianization ?**
+
+- My Organization can have a similar structure too
+
+- For exaple **mycompany.com** is my organization and have multiple **subdomains** for each purpose
+
+- All of these will be configured in my organization's **internal DNS Server**  
+
+To configure **web** to resolve my **web.mycompany.com** . I want to when I say **web**, I mean **web.mycompany.com** for that I make an **entry** into my host's **/etc/resolv.conf** file called **search**
+
+```
+/etc/resolv.conf
+
+nameserver 192.168.1.100 
+search mycompany.com 
+```
+
+Next time, when I try to **ping web** , I will see it actually tries **web.mycompany.com** 
+
+**Record Type** 
+
+How are the record stored in the DNS Server ? 
+
+It's store **IP address** to host name known as **A records** 
+
+Store **IPv6** to host names is known as **AAAA records**
+
+Mapping one name to another name is called **CNAME records**
 
 
 
 
-
-
+  
 
 
 
