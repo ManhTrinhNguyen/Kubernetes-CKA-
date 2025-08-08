@@ -4067,19 +4067,120 @@ The Underlying Host, has visibility into all of the **processess** including tho
 
 When I list the same **processes** as a Root User from the Underlying Host, I see all the other processes along with the process running inside the container but with **different process ID** 
 
-When it come to networking out hosts has **its own intefaces (eth0)** that connect to the local area network . Our host has its own routing and **ARP tables** with information about rest of the network . I want to see all of those detail from the container 
+When it come to networking out hosts has **its own intefaces (eth0)** that connect to the local area network . Our host has its own routing and **ARP tables** with information about rest of the network . I want to see all of those detail from the container  
 
+When the container is created, we create a **network namespace** for it, that way it has no visibility to any network-relate information on the host.
 
+- **Within its namespace** the container can have its own virtual interfaces, **routing** and **ARP tables**. The container has its own **interface**
 
+To create a new **network namepsace** on Linux host : `ip netns add <network-name>` 
 
+To list **network namespace**: `ip netns`
 
+To list the **Interface** on my host: `ip link`
 
+To view the **Interface** within the **network namespace** that we created : `ip netns exec <namespace-name>`
 
+- Then exectue `ip link` command inside the namespace
 
+- The other options is : `ip -n <namespace-name> link`
 
+The same with **ARP table** 
 
+- If I run `arp` command on the  Host I see a list of **entries**
 
+- If I run inside the container  I will see **No entries** and the same for **Routing Table**
 
+As of now the **Network namespace** have no network connectivity . They have no **Interfaces** of their own and they can not see the **Underlying Host Network** 
+
+- First look at establishing connectivity between **namespaces** themselves .
+
+  - Just like how we connect 2 Physical Machine together using a cable the an **eth** on each machine . I can connect 2 **namespace** together using a **Virtual Ethernet Pair or Virtual Cable**. It is often referred to as a **Pipe**
+ 
+  - To create the cable: `ip link add veth-red type veth peer name veth-blue`
+ 
+  - Next is to attach each **Interface** to the **appropriate namespace**: `ip link set veth-red netns red`. Same with the **Blue Namespace**
+ 
+  - We can then assign **IP addresses** to each of these **namespaces** : `ip -n red-namepsace addr add 192.168.15.1 dev veth-red`. The same with **Blue nameSpace** : `ip -n blue addr add 192.168.15.2 dev veth-blue`
+ 
+  - Then bring up the Interface: `ip -n red-namespace link set veth-red up`. Also for **Blue Namespace** : `ip -n blue-namespace link set veth-blue up`
+ 
+  - Try to ping from **Red Namespace to Blue Namespace** : `ip netns exec red ping <blue-ipaddress>`
+ 
+  - If I look at the **ARP Table** on the **Red Namespace** . I can see its identified its blue neighbor with **BLue IP address with MAC address** .
+ 
+  - **Host ARP table** has no idea about these new **namespaces** we have created
+ 
+  - **What can I do when I have more of them ? How to enable all of them to communicate with each other**.
+ 
+  - Just like in the Physical world, I create a **Virtual Network** inside my host . To create a Network I need a **Switch** . To create **Virtual Network** I need a **Virtual Switch**
+ 
+  - So I create a **Virtual Switch** within our host and connect the **namespaces** to it
+ 
+  - (Linux Bridge) To create **Internal Bridge network** we add a new **Interface** to the Host: `ip link add v-net-0 type bridge`. As far as our **Host** is concerned, it is just another **Interface** . I will appear in the output of the `ip link` command along with the other **Interfaces** .
+ 
+  - To bring the **v-net-0 Interface up** : `ip link set dev v-net-0 up` .
+ 
+  - For **namespaces** this **Interfaces** is like a **switch** that it can connect to . Think of it as an **Interface** of the Host and a **Swtich for the namespace**
+ 
+  - The next step is to connect the **namespaces** to this **Virtual Network Switch**
+ 
+  - Earlier, we create the cable or the **Eth pair** with the **veth-red and veth-blue Interfaces** to connect to each other
+ 
+  - Now we will connecting all **namespaces** to the **Bridge network** . So we need new cables for that purpose . Before that I will delete the **veth-red and veth-blue eth** : `ip -n red link del veth-red` . When I delete the link with one end the other end gets deleted automatically
+ 
+  - Now I will create new Cables to connect the **namespaces** to the **Bridge** : `ip link add veth-red type veth peer name veth-red-br` the same for **blue namespace**
+ 
+  - To attach one end of this, of the **Interface** to the **Red Namespace** : `ip link set veth-red netns red`
+ 
+  - To attach the other end to the **Brigde Network** : `ip link set veth-red-br master v-net-0` . The same for **Blue namepsace**
+ 
+  - Now set **ip addresses** for these links and turn them up : `ip -n red addr add 192.168.15.1 dev veth-red` . Same for **Blue namespace**
+ 
+  - And finally turn the devices up : `ip -n red link set veth-red up` .
+ 
+  - The container can now reach each other over the network .
+ 
+  - Follow the same proceed the connect remaining two namespace to the same network. '
+ 
+  - The now have all **namespaces** connect to our **Bridge network** and they can all communicate with each other
+ 
+  - From my **Host** What if I try to reach one of these interfaces in these **namespace*** ? . It will Not work
+ 
+  - But what if I really want to establish connectivity between my host and these **namespace** ?
+ 
+  - The **Virtual Swtich** is actually a **network Interface** for the host . So we do have an **Interface** on the `192.168.15.0` network on our host . Since this just another **interface** all we need to do is assign an IP address to it so we can reach the **namespaces** through it : `ip addr add 192.168.15.5/24 dev v-net-0` .
+ 
+  - Note: This entire network is still **Private** and restricted within the **Host** from within the **namespaces** you can't reach the outside world nor can anyone from the outside world reach the services or applicaions hosted inside .
+ 
+  - The only door to the outside world is the **Ethernet Port** on the Host
+ 
+  - How do we configure this bridge to reach the **LAN network** through the **Ethernet Port**
+ 
+  - What happens if I try to Ping this host from my **blue namespace**. The **Blue Namespace** see that I am trying to reach a network  which is different from my Current network . So it look at the **Routing Table** : `ip netns exec blue route` to see how to find that Network . The Routing table has no information about other Network . So it comes back saying that the Network is unreachable
+ 
+  - So we need to add an entry into a **Routing Table** to provide a **Gateway or door** to the outside world
+ 
+  - To find that **Gateway** . **Gateway** is the system on the **Local Network** that connects to the **other network**. What is a system that has **one Interface on the Network local** to the **Blue Namespace**  and it also connected to the **Outside LAN Network** ?
+ 
+  - It's the **Local Host** that have all these **namespaces** on so I can ping the **namespace** . Out **Localhost** has an **Interface** to attach the **Private Network** so I can ping the **Namespace**,  so **Our LocalHost** is the **Gateway** that connects the 2 Networks together .
+ 
+  - We can now add a **Route Entry** in the **blue namespace** to say **Route** all traffic to `192.168.1.0` network through the **Gateway** at `192.168.15.5`.
+ 
+  - **The Host** has 2 IP addresses one on the **Brigde Network** at `1925.168.15.5` and another on the External Network at `192.168.1.2`
+ 
+  - Can I use any in the Route ? No, Bcs the **Blue namespace** can only reach the **Gateway** in its **Local Network** at `192.168.15.5`
+ 
+  - The **Default Gateway** should be reachable from my **namespace** when I try to add my Route
+ 
+  - When I try to **ping** now I no longer get the **Network unreachable message** . But I still don't get any respose back from the ping  . The Problem is from our **Home Network** we tried to reach the **external Internet** through our **Router** . Our **Home network** has our internal Private IP addresses that the destination network don't know about so they can not reach back .
+ 
+  - For this we need **NAT** enable on our host acting as a **Gateway** here so that it can send the messages to the LAN in its own name with its own address
+ 
+  - To add **NAT** functionality to our Host. We should do that using `iptables -t  nat -A POSTROUTING -s 192.168.15.0/24 -j MASQUERADE` add the new rule in the **NAT IP table** in the post routing chain to **masquerade or replace** the **From Address** on all packets coming from the source network `192.168.15.0` with its own ip address . That way anyone receiving these Packets outside the network will think that they are coming from the Host and not from within the **namespace**
+ 
+  - Finally say the **LAN** is connected to the internet . We want the **namespaces** to reach the internet 
+ 
 
 
 
