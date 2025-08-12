@@ -183,6 +183,8 @@
   - [coreDNS](#coreDNS)
  
   - [Network namespaces](#Network-namespaces)
+ 
+  - [Docker Networking](#Docker-Networking)
 
 # Kubernetes-CKA-
 
@@ -4245,6 +4247,7 @@ Docker create **NAT rules** for that . Using **iptables** , we create an entry i
 iptables -t nat -A PREROUTING -j DNAT --dport 8080 --to-destination 80 
 ```
 
+To see the rules Docker created : `iptables -nvL -t nat`
 
 
 
