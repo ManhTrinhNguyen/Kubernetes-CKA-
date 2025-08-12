@@ -4180,8 +4180,70 @@ As of now the **Network namespace** have no network connectivity . They have no 
   - To add **NAT** functionality to our Host. We should do that using `iptables -t  nat -A POSTROUTING -s 192.168.15.0/24 -j MASQUERADE` add the new rule in the **NAT IP table** in the post routing chain to **masquerade or replace** the **From Address** on all packets coming from the source network `192.168.15.0` with its own ip address . That way anyone receiving these Packets outside the network will think that they are coming from the Host and not from within the **namespace**
  
   - Finally say the **LAN** is connected to the internet . We want the **namespaces** to reach the internet 
- 
 
+ ## Docker Networking 
+
+ I have a Server with Docker installed on it . 
+
+ - A server have **eth0** to connect to a **Local Network** with **IP 192.168.1.10**
+
+ - Run the container with **None Network** : `docker run --network none nginx` : With **None Network** Docker container is not  attached to any network . The container can not reach the outside world and vice versa
+
+ - With **Host Network** the container attached to the **Host Network** . There is no **Network Isolation** between the Host and the Container
+
+   - If I deploy Web App on port 80 : `docker run --network host nginx` then the Web App is available on port 80 on the host without having to do **Port Mapping**
+  
+   - If I try to run the same container at the same Port , It won't work as they share the **Host Networking**
+  
+- With **Bridge** an **Internal Private Network** is created which the **Docker host** and containers attach to
+
+  - The network has an **IP 172.17.0.0** by default and each device connecting this network get their own **Internal Private Network address** on this network    
+
+**How Docker created and managed Bridge Network ?**
+
+When Docker is installed on the host, it creates an **internal private network** called **Bridge** by default . To see that : `docker network ls`
+
+Docker call the network **Bridge**. But on the Host the network is created by the name **Docker0**. To see it : `ip link`
+
+Docker uses : `ip link add docker0 type bridge` 
+
+Note: The Interface, or network is currently down . 
+
+The **Bridge Network** is like an **Interface** to the Host but it switch to the **namespaces or containers** within the Host . So the **Interface Docker0** on the host is assigned an **IP 172.17.0.1** : `ip addr`. 
+
+Whenever a container is created, Docker create **Network Namspace** for it 
+
+To list the **namespace**: `ip netns`
+
+Inpsect the containers : `docker inspect <container-id>` To see the **namespace** associated with each **container** 
+
+**How does Docker attach the container or its network namespace to the bridge network?**
+
+Docker create a **Virtual Cable** with **Two Interfaces** 
+
+Run the `ip link` on the Docker Host . I can see **1 end of the Interface** just attached to the **Local Bridge Docker0** 
+
+Run the `ip -n <namespace-id> link` I can see **the other end of the Interface** within the **container Namespace** .
+
+The **Interface** also gets an IP assigned within the Network . `ip -n <container-id> addr`
+
+The **Interface** pair can be identified using their numbers **Odd and Even** . 
+
+**Port Mapping** 
+
+The container I created : `docker run nginx` . It's a Web Application serving webpage on Port 80 . 
+
+Since my container is within a **Private Network** inside the host, only other contaiers in the same Network or the host itself can access this webpage 
+
+To allow external User to access the applications hosted on containers, Docker provides a **port mapping** . `docker run -p 8080:80 nginx`
+
+**How does Docker do Port Mapping**  
+
+Docker create **NAT rules** for that . Using **iptables** , we create an entry into the **NATs table** to append the rules to the prerouting chain to change the destination port from 8080 to 80 
+
+```
+iptables -t nat -A PREROUTING -j DNAT --dport 8080 --to-destination 80 
+```
 
 
 
