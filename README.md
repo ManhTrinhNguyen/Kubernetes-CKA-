@@ -188,6 +188,9 @@
  
   - [Container Networking Interface CNI](#Container-Networking-Interface-CNI)
 
+  - [Cluster Networking](#Cluster-Networking) 
+  
+
 # Kubernetes-CKA-
 
 ## Kodeloud Note 
@@ -4273,7 +4276,27 @@ As long as the **Container Runtime** and **Plugin** adhere to these standards th
 
 When Kubernetes create Docker container, I create them on the **Non-network** . It then invoke the configured CNI plugins who take care of the rest of configuration 
 
+## Cluster Networking 
 
+K8 Cluster consist of **Master and Worker Nodes** . Each Nodes must have at least **1 Interface** connected to a network 
+
+Each **Interface** must have an address cinfigured . The **hosts** must have a unique **host name set and unique MAC address** 
+
+NOTE: Especically if I created the VMs by cloning from existing ones . 
+
+There are some **Ports** that needs to be opened as well . These are used by various components in the **Control Plane** 
+
+The Master should accept on **6443 Port for API-Server** . The Worker Nodes, kubectl tools, external users and all other control plane components access the **Kube API server at port 6443** 
+
+The **Kubelet** on the Master and Worker Nodes listen on Port **10250** 
+
+The **Kube Scheduler** requires port **10259** to be open 
+
+The **Kube Controller Manager** require port **10257** to be open 
+
+The Work Nodes expose services for external access on **port 30000 to 32767** 
+
+The **ETCD Server** listens on port **2379** . Also need an additional port **2380** open so the **ETCD Client** can communicate with each other as well (In case multiple Master Node) 
 
 
 
