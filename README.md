@@ -185,6 +185,8 @@
   - [Network namespaces](#Network-namespaces)
  
   - [Docker Networking](#Docker-Networking)
+ 
+  - [Container Networking Interface CNI](#Container-Networking-Interface-CNI)
 
 # Kubernetes-CKA-
 
@@ -4249,16 +4251,27 @@ iptables -t nat -A PREROUTING -j DNAT --dport 8080 --to-destination 80
 
 To see the rules Docker created : `iptables -nvL -t nat`
 
+## Container Networking Interface CNI 
 
+We created a Program that performs all the required tasks to get the container attached to a **Brigde Network** 
 
+I can run this program and specify that I want to add this container to a particular **namespace** : `bridge add <container-id> /var/run/netns/<container-id>`. The **Brigde Program** take care of the rest so that the container runtime environments are relieved of those tasks 
 
+For example, When Kubernetes created a new container, they call the **Bridge Program** and pass the **Container ID** and namespace to get networking configured for that container 
 
+**CNI** is a set of Standard that define how programs should be developed to solve networking challenges in a **Container Runtime Environment** . The **Program** are referred to as plugins . In this  case **Bridge program** is a Plugin for **CNI** . 
 
+**CNI** defines a set of responsibilities for **container run times and plugins**. 
 
+- For **Container Run Time** , **CNI** specifies that it is responsible for creating a **Network namespace** for each container . It should then identify the networks the container must attach to, **container runtime** must then invoke the plugin when the container is created using **add command** and also invoke the plugin when the container deleted **del command**
 
+- It also specifies how to configure a network plugin on the **Container runtime environment** using JSON file.
 
+- On the **Plugin side** it defines that the plugin should support **add, del and check command** line arguments and these should accept parameters like **container and network namespace** . The **plugin** should take care of assigning IP addresses to the Pods and any associated routes required for the containers to reach other containers in the network.
 
+As long as the **Container Runtime** and **Plugin** adhere to these standards they can all live together in harmony . Any runtime should be able to work with any **Plugin** 
 
+When Kubernetes create Docker container, I create them on the **Non-network** . It then invoke the configured CNI plugins who take care of the rest of configuration 
 
 
 
