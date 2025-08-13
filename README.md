@@ -191,6 +191,8 @@
   - [Cluster Networking](#Cluster-Networking)
  
   - [Pod Networking](#Pod-Networking)
+ 
+  - [CNI in Kubernetes](#CNI-in-Kubernetes)
   
 
 # Kubernetes-CKA-
@@ -4316,16 +4318,51 @@ Let's say we have 3 Nodes Cluster
 
 The Nodes are part of an **External Network 192.168.1.x** 
 
+## CNI in Kubernetes
 
+CNI define the responsibilities of container runtime.
 
+As per CNI, container runtime, Kubernetes is responsible for **creating container Network Namespace**, **Identify and attaching those namespace** to the right Network by calling the Network Plugin
 
+**Where to specify Network Plugin** 
 
+The CNI plugin must be invoked by the component within Kubernetes that is responsible for creating Container bcs that component must then invoke the appropriate Network plugin after the container is created 
 
+**How to configure container runtime to use a particular plugin?** 
 
+**Network Plugins** are all installed in **/opt/cni/bin** . That's where the container runtimes find the plugins 
 
+But which Plugin to use and how to use it is configured in the **/etc/cni/net.d** . There may be multiple configuration files in this directory that's responsible for configuring each plugin . 
 
+**bridge con file** : `cat /etc/cni/net.d/10-bridge.conf`
 
+- **isGateway** defines whether the bridge interface should get an IP address assigned so it can act as a Gateway 
 
+- **ipMasq**: defines if a NAT rule should be added for IP masquerading
+
+- **ipam**: Define IPAM configuration . Thus is where I define a Subnet that will be assigned to Pods in nessesary route
+
+- **type: host-local** indicates that the IP addresses are managed locally on this host
+
+- **type: DHCP server**: maintaining it remotely
+
+```
+{
+  "cniVersion": "0.2.0",
+  "name": "mynet",
+  "type": "bridge",
+  "bridge": "cni0",
+  "isGateway": true,
+  "ipMasq": true,
+  "ipam": {
+    "type": "host-local",
+    "subnet": "10.22.0.0/16",
+    "routes": [
+      { "dst": "0.0.0.0/0" }
+    ]
+  }
+}
+```
 
 
 
