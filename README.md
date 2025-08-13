@@ -189,6 +189,8 @@
   - [Container Networking Interface CNI](#Container-Networking-Interface-CNI)
 
   - [Cluster Networking](#Cluster-Networking)
+ 
+  - [Pod Networking](#Pod-Networking)
   
 
 # Kubernetes-CKA-
@@ -4297,6 +4299,48 @@ The **Kube Controller Manager** require port **10257** to be open
 The Work Nodes expose services for external access on **port 30000 to 32767** 
 
 The **ETCD Server** listens on port **2379** . Also need an additional port **2380** open so the **ETCD Client** can communicate with each other as well (In case multiple Master Node) 
+
+## Pod-Networking
+
+There is Network that connect the **Nodes** together . But there is also another layer of Networking that is crucial to the Cluster functioning **Pod Networking** 
+
+**K8s Requirment** :
+
+- To get its own unique UP address . And that every Pod should be able to reach every other Pod within **the same node** using that IP address
+
+- And every Pod should be able to reach every **other Pod on the Other Nodes** 
+
+**How to implement?**
+
+Let's say we have 3 Nodes Cluster 
+
+The Nodes are part of an **External Network 192.168.1.x** 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
