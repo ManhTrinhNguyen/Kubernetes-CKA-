@@ -193,6 +193,8 @@
   - [Pod Networking](#Pod-Networking)
  
   - [CNI in Kubernetes](#CNI-in-Kubernetes)
+ 
+  - [CNI weave](#CNI-weave)
   
 
 # Kubernetes-CKA-
@@ -4364,8 +4366,35 @@ But which Plugin to use and how to use it is configured in the **/etc/cni/net.d*
 }
 ```
 
+## CNI weave 
 
+`kubectl apply -f https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml`
 
+We had our own custom CNI script that we've built and integrated into Kubelet through CNI 
+
+The **Networking Solution** we set up manually had a routing table which mapped what networks are on what hosts . So when packet is sent from one pod to the other, it goes out to the network, to the Router . And finds its way to the Node that hosts that Pod 
+
+But in larger Environment with hundreds of Nodes, in a Cluster and hundreds of pods on each Node, this is **Not Practical**
+
+The **Weave CNI plugin** is deployed on a Cluster, it deploys an **Agent or Service on each Node**. They communicate with each other to exchange information regarding the Nodes and Network and Pods within them 
+
+Each **agent or peer** stores a topoly of the entire setup . That way they know the Pods and their IPs on the other Nodes . 
+
+**Weave** creates its own bridge on the Nodes and names at **Weave**, then assigns IP address to each network . 
+
+**Single Pod** maybe attached to multiple **Bridge Network** . For example I could have a Pod attached to **Weave Bridge** as well as the **Docker Bridge** created by Docker  
+
+**Weave** makes sure that Pods gets the correct route configured to reach the Agent, And the Agent then takes care of the other Pods 
+
+When packet send from 1 Pod to another Pod on another Node . **Weave** intercepts the packet and identifies that it's on a separate network, it then encapsulates this packet into a new one with new source and destination and sends it across the network . Once on the other side, **The other Weave Agent** retrieves the packet, decapsulates it, and routes the packet to the right Pod 
+
+**How to Deploy Weave** 
+
+**Weave and Weave Peer** can be deploy as Services or Daemons on each Node in the Cluster Manually 
+
+Or if Kubernetes is set up already, then an easier way to do that is to deploy it as Pod in the Cluster 
+
+Once the base Kubernetes system is ready, with Nodes and Networking configured correctly between the Node and the basic control Plane components are deployed, **Weave** can be deployed in the Cluster with : `kubectl apply -f https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml`
 
 
 
