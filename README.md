@@ -195,6 +195,8 @@
   - [CNI in Kubernetes](#CNI-in-Kubernetes)
  
   - [CNI weave](#CNI-weave)
+ 
+  - [IPAM Ip address Managment](#IPAM-Ip-address-Managment)
   
 
 # Kubernetes-CKA-
@@ -4396,22 +4398,51 @@ Or if Kubernetes is set up already, then an easier way to do that is to deploy i
 
 Once the base Kubernetes system is ready, with Nodes and Networking configured correctly between the Node and the basic control Plane components are deployed, **Weave** can be deployed in the Cluster with : `kubectl apply -f https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml`
 
+## IPAM Ip address Managment
 
+The reponsible of IPAM is of the CNI plugin . The Network solution provider to take care of assigning IP's to the containers . 
 
+To manage these **IP's** is to store the list of **IP's in the file** and make sure we have necessary code in our script to manage this file properly . This file will be place on each host and manages the IP's of parts on those Nodes 
 
+Instead of coding that ourselves in our script, CNI comes with 2 built-in plugins to which I can outsource this task. 
 
+- In this case the plugin that implement the approach that we followed for managing the IP addresses locally on each host is the **Host local Plugin**
 
+- But it is still our responsibility to invoke that plugin in our script or **we can make our script dynamic to support different kinds of plugin**
 
+- The CNI configuration file has a section called IPAM in which we can specify the type of plugin to be used. The **Subnet and Route** to be used
 
+- This details can be read from our script to invoke the appropriate plugin instead of hardcoding it 
 
+```
+{
+  "cniVersion": "0.2.0",
+  "name": "mynet",
+  "type": "net-script",
+  "bridge": "cni0",
+  "isGateway": true,
+  "ipMasq": true,
+  "ipam": {
+    "type": "host-local",
+    "subnet": "10.244.0.0/16",
+    "routes": [
+      {
+        "dst": "0.0.0.0/0"
+      }
+    ]
+  }
+}
+```
 
+Different network solution providers does it differently 
 
+**How Weavework manage Ip addresses** 
 
+Some IP's assigned by Weave
 
+**Weave** by default allocates the IP ranges **10.32.0.0/12** for the entire network 
 
-
-
-
+From this range the peers decide to split the IP addresses equally between them and assigns one portion to each node . Pods created on these nodes will have IP's in this range . these ranges are configurable with additional options pass while deploying Weave Plugin to a Cluster 
 
 
 
