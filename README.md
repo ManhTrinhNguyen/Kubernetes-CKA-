@@ -199,6 +199,10 @@
   - [IPAM Ip address Managment](#IPAM-Ip-address-Managment)
  
   - [Service Networking](#Service-Networking)
+ 
+  - [Cluster DNS](#Cluster-DNS)
+ 
+  - [How Kubernetes Implements DNS](#How-Kubernetes-Implements-DNS)
   
 
 # Kubernetes-CKA-
@@ -4506,13 +4510,46 @@ Any traffic going to the IP address `10.103.132.104:3306` destinate to `10.244.1
 
 To see kube-proxy logs : `cat /var/log/kube-proxy.log`
  
+## Cluster-DNS 
 
+Kubernetes deploy a built-in DNS Server by default when I set up a Cluster 
 
+Whenever a service is created, the Kubernetes DNS Service create a record for a Service . It maps a Service Name to the IP address 
 
+If Service is in a separate Namespace. To talk to that Service I would do : `<service-name>.<service-namespace>` 
 
+For each **Namespace** the DNS Server create a **Sub domain**. All **Services** are group together into another **Sub domain called SVC** : `<service-name>.<service-namespace>.svc`
 
+All Pods and Services for a **namespace** are grouped together within a **Sub domain** in the name of a **namespace** 
 
+## How Kubernetes Implements DNS 
+ 
+**How do CoreDNS set up?**
 
+The **CoreDNS** Server is deploy **as a Pod** in the Kube system namespace in the Kubernetes Cluster 
+
+This Pods run **CoreDNS executable** .
+
+**CoreDNS** require a configuration file . `cat /etc/coredns/Corefile`
+
+```
+cat /etc/coredns/Corefile
+.:53 {
+    errors
+    health
+    kubernetes cluster.local in-addr.arpa ip6.arpa {
+        pods insecure
+        upstream
+        fallthrough in-addr.arpa ip6.arpa
+    }
+    prometheus :9153
+    proxy . /etc/resolv.conf
+    cache 30
+    reload
+}
+```
+
+The Plugin help coreDNS work with Kubernetes is `kubernetes cluster.local in-addr.arpa ip6.arpa`. This is where Top Level Domain Name of Cluster is set : `cluster.local`
 
 
 
