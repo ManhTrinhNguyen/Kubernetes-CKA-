@@ -197,6 +197,8 @@
   - [CNI weave](#CNI-weave)
  
   - [IPAM Ip address Managment](#IPAM-Ip-address-Managment)
+ 
+  - [Service Networking](#Service-Networking)
   
 
 # Kubernetes-CKA-
@@ -4443,6 +4445,92 @@ Some IP's assigned by Weave
 **Weave** by default allocates the IP ranges **10.32.0.0/12** for the entire network 
 
 From this range the peers decide to split the IP addresses equally between them and assigns one portion to each node . Pods created on these nodes will have IP's in this range . these ranges are configurable with additional options pass while deploying Weave Plugin to a Cluster 
+
+## Service Networking
+
+Service is accessible from all Pods on the Cluster 
+
+While a Pod is hosted on a Node, a **Service** is hosted across the cluster . **Service** not bound to specific Node 
+
+**Cluster IP** is Only accessible from within a Cluster 
+
+**Node Port**  just like **Cluster IP** but in addition it also **expose** the application on a **Port** on **all Nodes** in the Cluster . This way external User have access to a Service 
+
+**How are the Services getting these IP Addresses?** | **How do they made available across all the Nodes in the Cluster?** | **How do Service available to external User through Port on each Node** 
+
+**Kubelet** run on every Worker Nodes. Each **Kubelet service on each Node watches **the change** in the Cluster through the **Kube API Server** 
+
+- Every time new Pod created. It then invoke **CNI Plugin** to configure networking for that Pod
+
+Similarly each Node runs another component known as **kube-proxy** 
+
+- **Kube-proxy** watch **the changes** in the Cluster through **Kube API-Server** . Everytime new **Service** created **Kube-proxy** get action
+
+- **Services** are Cluster-wide concept .
+
+- There is **no processes or namespaces or interfaces** for a **Service** . It's a **Virtual Object**
+
+When we create **Service Object** in Kubernetes . It is assigned an IP address from a **predefined range**. 
+
+The **kube-proxy** components running on each Node gets that IP and creates **forwarding rules** on each Nodes in the Cluster  
+
+To create **Forwarding Rules** : 
+
+- **Kube-proxy** support **userspace** where **kube-proxy** listen on a Port
+
+- For each **Service** and proxy's connection to the Pods by creating **ipvs** rules
+
+- Default Option is using **iptables**
+
+  - The proxy mode can be set using the proxy mode option while configuring the **kube-proxy** service . If this not set : `kube-porxy --proxy-mode [userspace | iptables | ipvs]` it defailt to **iptables**
+
+**How iptables are configured by kube-proxy and how can view them**
+
+For example I have a Pod name DB with IP 10.244.1.2 
+
+We create a service of that Cluster IP to make this Pod available within the Cluster . When the Service is created, Kubernetes assigns an IP address to it . It set to `10.103.132.104`
+
+This range is specified in the **Kube API Service** option called `--service-cluster-ip-range ipNet default: 10.0.0.0/24`
+
+When check **API server optione** : `--service-cluster-ip-range=10.96.0.0/12`
+
+When I set up my Pod networking, I provided a Pod network **CIDR 10.244.00/16** 
+
+Whatever range I specify for each of these Network, it shouldn't overlap 
+
+**POD and Services** should have its own dedicated of IP to work with. 
+
+I can see the rules created by **kube-proxy** in the IP tables's NAT table output : `iptables -L -t nat | grep db-service`
+
+Any traffic going to the IP address `10.103.132.104:3306` destinate to `10.244.1.2`. This done by adding a **DNAT rule to iptables**
+
+To see kube-proxy logs : `cat /var/log/kube-proxy.log`
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
