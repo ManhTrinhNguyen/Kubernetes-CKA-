@@ -209,6 +209,8 @@
 - [Design and Install Kubernetes Cluster]
 
   - [Design Kubernetes](#Design-Kubernetes)
+ 
+  - [Configure High Availability](#Configure-High-Availability)
   
 
 # Kubernetes-CKA-
@@ -4646,7 +4648,17 @@ Production Grade:
 
 - Use Node Selectors to assign application to Nodes with specific disk type 
 
+## Configure High Availability
 
+**What happen when I lose the Master Nodes in my Cluster?**
+
+Must consider **Multiple Master Nodes** 
+
+**High Availability** configuration is where you have rebundancy across every component in the Cluster so as to avoid a single point of failure 
+
+In a HA set up with an addition **Master Node** I have the same components running on the new Master as well 
+
+- 
 
 
 
