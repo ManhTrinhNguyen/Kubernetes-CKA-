@@ -205,6 +205,10 @@
   - [How Kubernetes Implements DNS](#How-Kubernetes-Implements-DNS)
  
   - [Gateway API](#Gateway-API)
+ 
+- [Design and Install Kubernetes Cluster]
+
+  - [Design Kubernetes](#Design-Kubernetes)
   
 
 # Kubernetes-CKA-
@@ -4626,8 +4630,21 @@ spec:
           port: 8080
 ```
 
+## Design Kubernetes
 
+Production Grade:
 
+- HA Multi Node Cluster with multiple master Node
+
+- High Performance workloads, SSD Back Storaged
+
+- Multiple Concurrent connections - Network based storage
+
+- Persistent shared volumes for shared access across multiple PODs
+
+- Labels Nodes with specific disk types
+
+- Use Node Selectors to assign application to Nodes with specific disk type 
 
 
 
