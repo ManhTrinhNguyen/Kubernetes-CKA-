@@ -215,8 +215,6 @@
 
 # Kubernetes-CKA-
 
-<img width="1071" height="668" alt="Blank board" src="https://github.com/user-attachments/assets/4b00a9d6-643e-4523-8fc6-ab923f99cfff" />
-
 ## Kodeloud Note 
 
 (https://notes.kodekloud.com/docs/CKA-Certification-Course-Certified-Kubernetes-Administrator/Core-Concepts/Cluster-Architecture)
