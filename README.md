@@ -4555,6 +4555,8 @@ The Plugin help coreDNS work with Kubernetes is `kubernetes cluster.local in-add
 
 ## Gateway API
 
+API Gateway Docs (https://gateway-api.sigs.k8s.io/guides/http-redirect-rewrite/)
+
 Ingress is 2 or more **Services** manage by the same **Ingress Resource** 
 
 In multi Environment Ingress can not : 
