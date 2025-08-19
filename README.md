@@ -203,6 +203,8 @@
   - [Cluster DNS](#Cluster-DNS)
  
   - [How Kubernetes Implements DNS](#How-Kubernetes-Implements-DNS)
+ 
+  - [Gateway API](#Gateway-API)
   
 
 # Kubernetes-CKA-
@@ -4550,6 +4552,90 @@ cat /etc/coredns/Corefile
 ```
 
 The Plugin help coreDNS work with Kubernetes is `kubernetes cluster.local in-addr.arpa ip6.arpa`. This is where Top Level Domain Name of Cluster is set : `cluster.local`
+
+## Gateway API
+
+Ingress is 2 or more **Services** manage by the same **Ingress Resource** 
+
+In multi Environment Ingress can not : 
+
+- Namepsace Isolation
+
+- No RBAC for features
+
+- No Resource Isolation
+
+- Rules configuration . Ingress only support **HTTPS base rules** 
+
+What if each **Services** manage by different teams ?  
+
+**Gateway API** is an official Kubernetes project focused on **Layer 4 and Layer 7 routing** . This Service focus on the next generation of **Ingress, Load balancingm Service Mesh APIs** 
+
+**Infrastucture Providers GatewayClass**: What the underlying network infastructure would be such as **Nginx, Traefik, or other Load balancer** 
+
+**Cluster Operators Gateway**: Which are instances of the **Gateway Class** 
+
+And then we have **HTTP, TCP, GRPC routes** by the application Developers 
+
+Similar to **Ingress** we must deploy a **Controller for Gateway**
+
+```
+# gateway-class.yaml
+apiVersion: gateway.networking.k8s.io/v1
+kind: GatewayClass
+metadata:
+  name: example-class
+spec:
+  controllerName: example.com/gateway-controller
+```
+
+```
+# gateway.yaml
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: example-gateway
+spec:
+  gatewayClassName: example-class
+  listeners:
+    - name: http
+      protocol: HTTP
+      port: 80
+```
+
+```
+# http-route.yaml
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: example-httproute
+spec:
+  parentRefs:
+    - name: example-gateway
+  hostnames:
+    - "www.example.com"
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /login
+      backendRefs:
+        - name: example-svc
+          port: 8080
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
