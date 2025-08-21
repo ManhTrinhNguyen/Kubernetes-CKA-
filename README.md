@@ -4086,6 +4086,8 @@ Mapping one name to another name is called **CNAME records**
 
 ## Network namespaces
 
+[Untitled.pdf](https://github.com/user-attachments/files/21909048/Untitled.pdf)
+
 **Network namespaces** are used by containers like Docker to implement network isolation 
 
 Container are separate from the underlying host using **namespace** 
