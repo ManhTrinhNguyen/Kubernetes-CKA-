@@ -4636,7 +4636,9 @@ spec:
 
 ## Design Kubernetes
 
-Production Grade:
+Purpose - Cloud or OnPrem - Workloads
+
+Production Grade: 
 
 - HA Multi Node Cluster with multiple master Node
 
@@ -4644,11 +4646,17 @@ Production Grade:
 
 - Multiple Concurrent connections - Network based storage
 
-- Persistent shared volumes for shared access across multiple PODs
+- Persistent shared volumes for shared access across multiple PODs - Persistence volume 
 
 - Labels Nodes with specific disk types
 
-- Use Node Selectors to assign application to Nodes with specific disk type 
+- Use Node Selectors to assign application to Nodes with specific disk type
+
+Nodes : 
+
+- Virtual or Physical
+
+- Linux X86_64 Architecture 
 
 ## Configure High Availability
 
@@ -4660,12 +4668,36 @@ Must consider **Multiple Master Nodes**
 
 In a HA set up with an addition **Master Node** I have the same components running on the new Master as well 
 
-- 
+**How do they share the work among themselves?** 
 
+**API-SERVER** is responsible for accept and processing the request from **kubectl** . They work on 1 Request at the time . So the **API-SERVER** on all Cluster Node can be alive and running at the same time in an **active-mode**
 
+- With 2 Master I should set a **LB or Proxy** to send the request from **kubectl** to one of the **Masters** 
 
+**Scheduler and Controller Manager** these controllers watch the state of the Cluster and take action .
 
+- If multiple intances like these run on Parallel they might duplicate actions resulting .
 
+- **They must not run in Parallel**. They run by **Active and Standby mode**.
+
+- One of them is Active and Passive . Acheive through a **leader election process**
+
+- For example in **Controller Manager config** `kube-controller-manager --leader-elect true` . When the Controller Manager starts it try to gain a lease or a lock on an endpoint object in Kubernetes named as **Kube-controller manager endpoint**. Whichever process first update the endpoint with its information gains the lease and become the active of the two the other become passive . It holds the lock for the lease duration specified using the **--leader-elect-lease-duration 15s** option . The active process then renews the lease every 10s **--leader-elect-renew-deadline 10s**.
+
+- **--leader-elect-retry-period 2s** both the processes try to become leader every 2s . That way if the First process fail maybe the first master crashes then the second process can acquire the log and become the leader 
+
+**ETCD** . I can deploy **ETCD** in the same Master Node or as a Separate Node  
+
+- **API Server** is the only component that talks to **ETCD Server**
+
+```
+kube-apiserver \\
+--etcd-servers=https://,https://
+``` 
+
+- We need to make sure that API Server is pointing to the right address of etcd servers
+
+- **ETCD** is a distributed system so **API-SERVER** want to talk to it, can reach to it at any its instances . I can read and write data to any of the available etcd server instances 
 
 
 
