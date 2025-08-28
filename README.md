@@ -211,6 +211,8 @@
   - [Design Kubernetes](#Design-Kubernetes)
  
   - [Configure High Availability](#Configure-High-Availability)
+ 
+  - [ETCD in HA](#ETCD-in-HA)
   
 
 # Kubernetes-CKA-
@@ -4699,8 +4701,36 @@ kube-apiserver \\
 
 - **ETCD** is a distributed system so **API-SERVER** want to talk to it, can reach to it at any its instances . I can read and write data to any of the available etcd server instances 
 
+## ETCD in HA
 
+**How do ETCD elect the leader among themselves? How do the ensure a write is propagated among instances?**
 
+**ETCD** implement distributed consensus using **RAFT protocol** 
+
+When Cluster created I have 3 Nodes that don't have a leader elected . 
+
+**RAFT** algorithm uses random timers for initiating requests. The first one to finish the times send out a request to the other Nodes requesting permission to be the leader . The other managers on receiving the request response with their vote and the node assumes the leader role . 
+
+Now that it is elected the leader, it sends out notification at regular intervals to other master informing them that it is continuing to assume the role of the leader . 
+
+In case the other nodes do not receive a notification from the leader at some point in time which could either be due to the leader going down or losing network conectivity, the nodes initiate a re-election process among themselves and a new leader is identified 
+
+To install ETCD : 
+
+```
+wget -q --https-only "https://github.com/coreos/etcd/releases/download/v3.3.9/etcd-v3.3.9-linux-amd64.tar.gz"
+tar -xvf etcd-v3.3.9-linux-amd64.tar.gz
+
+mv etcd-v3.3.9-linux-amd64/etcd* /usr/local/bin/
+mkdir -p /etc/etcd /var/lib/etcd
+cp ca.pem kubernetes-key.pem kubernetes.pem /etc/etcd
+```
+
+`--initial-cluster peer-1=https://${PEER1_IP}:2380,peer-2=https://${PEER2_IP}:2380`
+
+Use `etcdctl` to store and retrieve data 
+
+To use version 3 : `export ETCDCTL_API=3`
 
 
 
