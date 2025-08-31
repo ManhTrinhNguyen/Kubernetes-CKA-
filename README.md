@@ -219,6 +219,8 @@
   - [kubeadm](#kubeadm)
  
   - [Deploy with Kubeadm Provision VMs with Vagrant](#Deploy-with-Kubeadm-Provision-VMs-with-Vagrant)
+ 
+  - [Deploy with kubeadm](#Deploy-with-kubeadm)
   
 
 # Kubernetes-CKA-
@@ -4760,17 +4762,43 @@ Kubernetes required network solution between Master and Worker Nodes called **PO
 
 #### Deploy with Kubeadm Provision VMs with Vagrant
 
+**Vargrant** is a tools that make easy to spin up a lot of VMs 
 
+#### Deploy with kubeadm 
 
+**Install container runtime**: On all 3 nodes 
 
+**Install kubadm** : On all 3 Nodes 
 
+```
+sudo apt-get update
+# apt-transport-https may be a dummy package; if so, you can skip that package
+sudo apt-get install -y apt-transport-https ca-certificates curl gpg
+```
 
+**Cgroup Drivers**: is a Linux feature, the Linux primitive that allow whether I am working with Docker or Kubernetes, it allows me to **specify resource limits** on my containers 
 
+- When I configure the Kubelet process and when I configure the container runtime, which in our case is container D, there is 2 different drivers that are available **cgroupfs and systemd**
 
+- I have to make sure whichever one I select both **Kubelet and Container Runtime** are configured to use the same Cgroup Driver
 
+- By default : In version 1.22 or later if the user does not set the Cgroup Driver field under the Kubelet configuration, **kubeadm** will default to **systemd** That mean now I don't have to worry about the **kubelet**
 
+- Now I have to make sure the **Container Runtime** set to **Systemd** (https://v1-33.docs.kubernetes.io/docs/setup/production-environment/container-runtimes/#containerd-systemd)
 
+  - Create the containerd dir : `sudo mkdir -p /etc/containerd`.
+ 
+  - ContainerD process allow me to generate default config : `containerd config default | sed 's/SystemdCgroup = false/SystemdCgroup = true/` | sudo tee /etc/containerd/config.toml`.
+ 
+  - Restart the containerd: `sudo systemctl restart containerd`
 
+**Initilizing container-planne Node** 
+
+- `sudo kubadm init --apiserver-advertise-address 192.168.56.11 --pod-network-cidr "10.244.0.0/16" --upload-certs`
+
+- `--apiserver-advertise-address 192.168.56.11`: Where my **API SERVER** is
+
+- `--pod-network-cidr "10.244.0.0/16"`: Cidr Pod 
 
 
 
