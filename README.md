@@ -213,6 +213,12 @@
   - [Configure High Availability](#Configure-High-Availability)
  
   - [ETCD in HA](#ETCD-in-HA)
+
+  - [Install Kubernetes the hard way](#Install-Kubernetes-the-hard-way)
+ 
+  - [kubeadm](#kubeadm)
+ 
+  - [Deploy with Kubeadm Provision VMs with Vagrant](#Deploy-with-Kubeadm-Provision-VMs-with-Vagrant)
   
 
 # Kubernetes-CKA-
@@ -4732,10 +4738,27 @@ Use `etcdctl` to store and retrieve data
 
 To use version 3 : `export ETCDCTL_API=3`
 
+## Install Kubernetes the hard way
 
+(https://www.youtube.com/watch?v=uUupRagM7m0&list=PL2We04F3Y_41jYdadX55fdJplDvgNGENo)
 
+## Install Kubernetes with kubeadm
 
+#### kubeadm 
 
+Can be use to bootstrap a Kubernetes Cluster 
+
+First: I need to have multiple systems or VMs provisioned . Decide what Master what is Worker nodes
+
+Second: Install the container runtime on the host 
+
+Third: Install **kubeadm** on all the Nodes  
+
+Fourth: Initialize master Server . During this process all of the required components are installed and configured on the Master server
+
+Kubernetes required network solution between Master and Worker Nodes called **POD Network** 
+
+#### Deploy with Kubeadm Provision VMs with Vagrant
 
 
 
