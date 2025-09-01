@@ -4744,6 +4744,77 @@ To use version 3 : `export ETCDCTL_API=3`
 
 (https://www.youtube.com/watch?v=uUupRagM7m0&list=PL2We04F3Y_41jYdadX55fdJplDvgNGENo)
 
+#### Provison Infras 
+
+1 Loadbalancer server , 2 Master and 2 Worker 
+
+#### Install the Client tools 
+
+I need to identify **Admin Client** to for performing Administatritive tasks such as creating certificates, kubeconfig and distribute them to other Nodes 
+
+Whatever system I choose make sure that system has **SSH** access to all other system 
+
+This case I use my Local Laptop 
+
+#### Secure Cluster communication
+
+**Generate ca.crt and ca.key**
+
+Generate **CA Private Key**: `openssl gensa -out ca.key 2048`
+
+Create **Cert Sigining Request**: `openssl req -new -key ca.key -subj "/CN-KUBERNETES-CA" -out ca.csr` 
+
+Self Sign **CA Cert** using its own private : `openssl x509 -req -in ca.csr -signkey ca.key -CAcreateserial -out ca.crt -days 1000`
+
+**Generate admin.crt and admin.key**
+
+Generate Admin Private Key : `openssl genrsa -out admin.key 2048`
+
+Generate **CSR** : `openssl req -new -key admin.key -subj "/CN-admin/O=system:masters" -out admin.csr`
+
+Sign the Cert using CA key : `openssl x509 -req -in admin.csr -signkey ca.key -CAcreateserial -out admin.crt -days 1000`
+
+**Generate kube-apiserver.crt and kube-apiserver.key** 
+
+**Kube-API** must have all name its go by 
+
+```
+cat > openssl.cnf <<EOF
+[req]
+req_extensions = v3_req
+distinguished_name = req_distinguished_name
+[req_distinguished_name]
+[v3_req]
+basicConstraints = critical, CA:FALSE
+keyUsage = critical, nonRepudiation, digitalSignature, keyEncipherment
+extendedKeyUsage = serverAuth
+subjectAltName = @alt_names
+[alt_names]
+DNS.1 = kubernetes
+DNS.2 = kubernetes.default
+DNS.3 = kubernetes.default.svc
+DNS.4 = kubernetes.default.svc.cluster
+DNS.5 = kubernetes.default.svc.cluster.local
+IP.1 = ${API_SERVICE}
+IP.2 = ${CONTROL01}
+IP.3 = ${CONTROL02}
+IP.4 = ${LOADBALANCER}
+IP.5 = 127.0.0.1
+EOF
+```
+
+```
+  openssl genrsa -out kube-apiserver.key 2048
+
+  openssl req -new -key kube-apiserver.key \
+    -subj "/CN=kube-apiserver/O=Kubernetes" -out kube-apiserver.csr -config openssl.cnf
+
+  openssl x509 -req -in kube-apiserver.csr \
+    -CA ca.crt -CAkey ca.key -CAcreateserial -out kube-apiserver.crt -extensions v3_req -extfile openssl.cnf -days 1000
+```
+
+
+
 ## Install Kubernetes with kubeadm
 
 #### kubeadm 
