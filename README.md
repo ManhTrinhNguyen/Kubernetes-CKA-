@@ -225,6 +225,8 @@
 - [Kustomize]
 
   - [Kustomize Problem Statement and idealogy](#Kustomize-Problem-Statement-and-idealogy)
+ 
+  - [kustomization yaml file](#kustomization-yaml-file)
   
 
 # Kubernetes-CKA-
@@ -4894,10 +4896,23 @@ Use case :
 
 Kustomize built-in with **kubectl** 
 
+#### kustomization yaml file
 
+**resources**: List of all kubernetes resources that should be managed by Kustomize 
 
+**commonLabels**: Things I need to change in here  
 
+#### Managing Directories 
 
+#### Customize Common Transformer 
+
+**commonLabel**: adds a label to all Kubernetes resources 
+
+**namePrefix/Suffix**: adds a common prefix-suffix to all Resource names 
+
+**Namespace**: adds a common namespace to all resources 
+
+**commonAnnotations**: adds an annotations to all resources 
 
 
 
