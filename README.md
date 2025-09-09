@@ -221,6 +221,10 @@
   - [Deploy with Kubeadm Provision VMs with Vagrant](#Deploy-with-Kubeadm-Provision-VMs-with-Vagrant)
  
   - [Deploy with kubeadm](#Deploy-with-kubeadm)
+ 
+- [Kustomize]
+
+  - [Kustomize Problem Statement and idealogy](#Kustomize-Problem-Statement-and-idealogy)
   
 
 # Kubernetes-CKA-
@@ -4870,6 +4874,55 @@ sudo apt-get install -y apt-transport-https ca-certificates curl gpg
 - `--apiserver-advertise-address 192.168.56.11`: Where my **API SERVER** is
 
 - `--pod-network-cidr "10.244.0.0/16"`: Cidr Pod 
+
+
+## Kustomize 
+
+#### Kustomize Problem Statement and idealogy
+
+Use case :
+
+- When I want to test my Deployment with Dev/Stage/Pro environment . I need to create 3 different folders and adjust all the different configuration I need to adjust. This is not scale and tedious when the code Growth
+
+**Kustomzie** help me to adjust one of my environment without dublicate my Code 
+
+**Kustomize** has 2 key terms :**Base Config and Overlays**
+
+- **Base Config**: represent config that will be identical accross all of my Environments (Default Value)
+
+- **Overlay** allow me to customize the behavior on per Environment basis 
+
+Kustomize built-in with **kubectl** 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
