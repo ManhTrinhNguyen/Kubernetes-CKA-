@@ -227,6 +227,8 @@
   - [Kustomize Problem Statement and idealogy](#Kustomize-Problem-Statement-and-idealogy)
  
   - [kustomization yaml file](#kustomization-yaml-file)
+ 
+  - [Patches](#Patches)
   
 
 # Kubernetes-CKA-
@@ -4914,12 +4916,25 @@ Kustomize built-in with **kubectl**
 
 **commonAnnotations**: adds an annotations to all resources 
 
+#### Patches
 
+Targeting one or more specific sections in a Kubernetes resource
 
+To create a patch there is 3 Parameters must be provided : **Operations Type, Targer, Value** 
 
+**Target**: What resources should this patch be applied on: 
 
+- Kind, Version/Group, Name, Namespace, labelSelector, AnnotationSelector 
 
+**Operation Type**: add/remove/replace 
 
+**Value**: What is the value that will either be replaced or added with 
+
+#### Component 
+
+Components provide the ability to define reusable pieces of configuration logic(resouces + patches )
+
+Useful in situations where applications support multiple optional features that need to be enabled only in a  subset of overlay 
 
 
 
