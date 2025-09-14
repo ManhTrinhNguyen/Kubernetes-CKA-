@@ -229,6 +229,8 @@
   - [kustomization yaml file](#kustomization-yaml-file)
  
   - [Patches](#Patches)
+ 
+- [Troubleshooting](#Troubleshooting)
   
 
 # Kubernetes-CKA-
@@ -4936,6 +4938,7 @@ Components provide the ability to define reusable pieces of configuration logic(
 
 Useful in situations where applications support multiple optional features that need to be enabled only in a  subset of overlay 
 
+## Troubleshooting
 
 
 
